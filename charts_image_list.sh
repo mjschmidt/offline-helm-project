@@ -123,7 +123,7 @@ paste file{1,2}| column -s $'\t' -t > joined
 cp joined ~/closed-env-container-images.txt
 sed -i "s/'//g" ~/closed-env-container-images.txt
 sed -i 's/  */:/g' ~/closed-env-container-images.txt
-
+echo container list is at file location ~/closed-env-container-images.txt
 
 rm file1 file2 image image.list image.notag.list incubator.charts.txt joined stable.charts.txt tag.noimage.list tag.noimage.list.presed
 
