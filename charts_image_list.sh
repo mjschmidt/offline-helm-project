@@ -39,6 +39,7 @@ done
 for f in `cat incubator.charts.txt`;
 do
 helm fetch  --untar --untardir /tmp incubator/$f
+helm fetch  -d /tmp/helm-charts-incubator incubator/$f
 mkdir /tmp/$f-final
 helm template --output-dir /tmp/$f-final /tmp/$f
 grep -hR image: /tmp/$f-final >>./imagelist.txt
