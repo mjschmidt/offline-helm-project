@@ -29,6 +29,7 @@ gsutil -m cp -R gs://kubernetes-charts-incubator .
 cd ~/charts
 git pull
 cd ~/helm-to-container
+git pull
 ### outputs a file to ~/closed-env-container-images.txt
 ./charts_image_list.sh
 ```
