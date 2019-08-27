@@ -5,6 +5,7 @@ Getting containers for a closed environment in an ugly way
 1. helm/charts in your home dir
 
 ```
+git clone https://github.com/helm/charts.git
 #clone down the complimentary repsistory or an empty one where where you wish to push charts to git
 https://github.com/mjschmidt/low-to-high-chart-zips.git
 #clone my repository
@@ -25,6 +26,9 @@ gsutil -m cp -R gs://kubernetes-charts-incubator .
 
 ### Usage
 ```
+cd ~/charts
+git pull
+cd ~/helm-to-container
 ### outputs a file to ~/closed-env-container-images.txt
 ./charts_image_list.sh
 ```
