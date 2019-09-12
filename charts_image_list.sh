@@ -1,8 +1,11 @@
 #/bin/bash
 
-pathtocharts='/home/'$USER'/charts'
+pathtocharts= $(pwd) + '/charts'
 stablecharts=$pathtocharts'/stable'
 incubatorcharts=$pathtocharts'/incubator'
+
+#clone helm charts to local folder
+git clone https://github.com/helm/charts.git
 
 #update help
 helm repo update
@@ -55,3 +58,6 @@ rm imagelist.txt
 cd /tmp
 tar -cf ~/helm-charts.tar.gz helm-charts-stable helm-charts-incubator
 
+cd $pathtocharts
+cd ../
+rm -rf ./charts
