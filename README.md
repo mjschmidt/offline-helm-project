@@ -1,5 +1,6 @@
 # helm-to-container
-Getting containers for a closed environment in an ugly way
+Getting containers for a closed environment in an ugly way.
+This is and always will be a Free and Open Source Project
 
 ### Pre Reqs
 ```
