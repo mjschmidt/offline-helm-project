@@ -21,7 +21,7 @@ helm version --client
 #expected output, server should not be working, just client. This is fine
 #Client: &version.Version{SemVer:"v2.14.3", GitCommit:"0e7f3b6637f7af8fcfddb3d2941fcc7cbebb0085", GitTreeState:"clean"}
 ```
-* gsutil
+* For all_get.sh: gsutil
 ```
 #install gsutil
 curl https://sdk.cloud.google.com | bash
