@@ -1,8 +1,10 @@
-# helm-to-container
-Getting containers for a closed environment in an ugly way.
+# Offline-Helm-Project
+Perfect for pulling together all the Dependencies needed to port to an offline env
 This is and always will be a Free and Open Source Project
 
 ### Pre Reqs
+* git
+* helm
 ```
 #curl down helm binary and move it to bin
 curl -o helm-v2.14.3-linux-amd64.tar.gz https://get.helm.sh/helm-v2.14.3-linux-amd64.tar.gz
