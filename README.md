@@ -28,7 +28,7 @@ First get your helm Charts and List of Associated Docker Containers using this s
 
 Grab the pictures using this script
 ```
-getpictures.sh
+./getpictures.sh
 ```
 
 
