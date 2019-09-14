@@ -21,7 +21,7 @@ helm version --client
 #expected output, server should not be working, just client. This is fine
 #Client: &version.Version{SemVer:"v2.14.3", GitCommit:"0e7f3b6637f7af8fcfddb3d2941fcc7cbebb0085", GitTreeState:"clean"}
 ```
-* For all_get.sh: gsutil
+* For all_gather.sh: gsutil
 ```
 #install gsutil
 curl https://sdk.cloud.google.com | bash
@@ -34,6 +34,12 @@ gcloud init
 First get your helm Charts and List of Associated Docker Containers using this script
 ```
 ./gather.sh
+```
+
+For getting all container image list and all charts
+```
+#this takes a long time to run ~10 minutes
+./all_gather.sh
 ```
 
 Grab the pictures using this script
