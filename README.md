@@ -21,15 +21,16 @@ helm version --client
 ```
 
 ### Usage
+First get your helm Charts and List of Associated Docker Containers using this script
 ```
-./charts_image_list.sh
-echo
-echo
-echo
-echo
-echo
-#copy this list of containers image:tag and run any docker pull scripts to grab them all
+./gather.sh
 ```
+
+Grab the pictures using this script
+```
+getpictures.sh
+```
+
 
 #### Ignore this for now
 ```
@@ -51,6 +52,4 @@ gcloud init
 gsutil -m cp -R gs://kubernetes-charts .
 gsutil -m cp -R gs://kubernetes-charts-incubator .
 ```
-
-
 

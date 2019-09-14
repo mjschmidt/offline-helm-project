@@ -58,6 +58,18 @@ rm imagelist.txt
 cd /tmp
 tar -cf ~/helm-charts.tar.gz helm-charts-stable helm-charts-incubator
 
+echo
+echo
+echo
+echo You charts are now in ~/helm-charts.tar.gz and ready to be moved to offline env
+echo The list of associated Docker images can be found in ~/closed-env-container-images.txt
+echo Reccomend you cat ~/closed-env-container-images.txt to list the image list on the screen for easy copy paste
+echo
+echo Next steps
+echo For pictures simply run the get pictures script
+
+
 cd $pathtocharts
 cd ../
 rm -rf ./charts
+rm stable.charts.txt incubator.charts.txt
