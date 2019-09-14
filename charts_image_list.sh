@@ -28,10 +28,10 @@ mkdir /tmp/helm-charts-incubator
 #Loop through stable 
 for f in `cat stable.charts.txt`;
 do 
-helm fetch  --untar --untardir /tmp stable/$f 
-helm fetch  -d /tmp/helm-charts-stable stable/$f
+#helm fetch  --untar --untardir /tmp stable/$f 
+#helm fetch  -d /tmp/helm-charts-stable stable/$f
 mkdir /tmp/$f-final
-helm template --output-dir /tmp/$f-final /tmp/$f
+helm template --output-dir /tmp/$f-final $stablecharts/$f
 grep -hR image: /tmp/$f-final >>./imagelist.txt
 rm -rf /tmp/$f-final
 rm -rf /tmp/$f
@@ -41,10 +41,10 @@ done
 #Loop through incubator
 for f in `cat incubator.charts.txt`;
 do
-helm fetch  --untar --untardir /tmp incubator/$f
-helm fetch  -d /tmp/helm-charts-incubator incubator/$f
+#helm fetch  --untar --untardir /tmp incubator/$f
+#helm fetch  -d /tmp/helm-charts-incubator incubator/$f
 mkdir /tmp/$f-final
-helm template --output-dir /tmp/$f-final /tmp/$f
+helm template --output-dir /tmp/$f-final /$incubatorcharts/$f
 grep -hR image: /tmp/$f-final >>./imagelist.txt
 rm -rf /tmp/$f-final
 rm -rf /tmp/$f
