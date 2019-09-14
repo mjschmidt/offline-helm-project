@@ -28,16 +28,10 @@ mkdir /tmp/helm-charts-incubator
 #Loop through stable 
 for f in `cat stable.charts.txt`;
 do 
-echo
-echo
-echo helm fatching
 helm fetch  --untar --untardir /tmp stable/$f 
 helm fetch  -d /tmp/helm-charts-stable stable/$f
-echo
-echo
-echo writing out template
 mkdir /tmp/$f-final
-helm template --output-dir /tmp/$f-final /tmp/$f
+helm template --output-dir /tmp/$f-final $tmp/$f
 grep -hR image: /tmp/$f-final >>./imagelist.txt
 rm -rf /tmp/$f-final
 rm -rf /tmp/$f
@@ -62,10 +56,8 @@ rm imagelist.txt
 
 #tar stable and incubator charts
 cd /tmp
-#gsutil -m cp -R gs://kubernetes-charts .
-#gsutil -m cp -R gs://kubernetes-charts-incubator .
-tar -cf ~/helm-charts.tar.gz helm-charts-stable helm-charts-incubator kubernetes-charts-incubator kubernetes-charts
-rm -rf kubernetes-charts-incubator kubernetes-charts 
+
+tar -cf ~/helm-charts.tar.gz helm-charts-stable helm-charts-incubator
 
 echo
 echo
