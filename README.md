@@ -27,6 +27,7 @@ helm version --client
 curl https://sdk.cloud.google.com | bash
 exec -l $SHELL
 gcloud init
+#use helmprojectoffline@gmail.com as the login account
 ```
 
 ### Usage
