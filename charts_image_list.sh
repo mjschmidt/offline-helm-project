@@ -1,6 +1,6 @@
 #/bin/bash
 
-pathtocharts= $(pwd) + '/charts'
+pathtocharts=$(pwd)'/charts/'
 stablecharts=$pathtocharts'/stable'
 incubatorcharts=$pathtocharts'/incubator'
 

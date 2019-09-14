@@ -13,6 +13,7 @@ curl -o helm-v2.14.3-linux-amd64.tar.gz https://get.helm.sh/helm-v2.14.3-linux-a
 tar -zxvf helm-v2.14.3-linux-amd64.tar.gz
 chmod +x linux-amd64/helm
 sudo mv linux-amd64/helm /usr/local/bin/
+helm init -c
 
 #test install for clent
 helm version
