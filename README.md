@@ -21,6 +21,13 @@ helm version --client
 #expected output, server should not be working, just client. This is fine
 #Client: &version.Version{SemVer:"v2.14.3", GitCommit:"0e7f3b6637f7af8fcfddb3d2941fcc7cbebb0085", GitTreeState:"clean"}
 ```
+* gsutil
+```
+#install gsutil
+curl https://sdk.cloud.google.com | bash
+exec -l $SHELL
+gcloud init
+```
 
 ### Usage
 First get your helm Charts and List of Associated Docker Containers using this script
