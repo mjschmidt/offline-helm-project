@@ -1,35 +1,27 @@
 # helm-to-container
-Getting containers for a closed environment in an ugly way
+Getting containers for a closed environment in an ugly way.
+This is and always will be a Free and Open Source Project
 
 ### Pre Reqs
 ```
-cd
-#clone helm charts
-git clone https://github.com/helm/charts.git
-#clone this repository
-https://github.com/mjschmidt/helm-to-container.git
 #curl down helm binary and move it to bin
 curl -o helm-v2.14.3-linux-amd64.tar.gz https://get.helm.sh/helm-v2.14.3-linux-amd64.tar.gz
 tar -zxvf helm-v2.14.3-linux-amd64.tar.gz
 chmod +x linux-amd64/helm
 sudo mv linux-amd64/helm /usr/local/bin/
 helm init -c
+rm helm-v2.14.3-linux-amd64.tar.gz
+rm -rf linux-amd64/
 
 #test install for clent
-helm version
+helm version --client
 
 #expected output, server should not be working, just client. This is fine
 #Client: &version.Version{SemVer:"v2.14.3", GitCommit:"0e7f3b6637f7af8fcfddb3d2941fcc7cbebb0085", GitTreeState:"clean"}
-#'no server error, but this is okay'
 ```
 
 ### Usage
 ```
-cd ~/charts
-git pull
-cd ~/helm-to-container
-git pull
-### outputs a file to ~/closed-env-container-images.txt
 ./charts_image_list.sh
 echo
 echo
@@ -37,7 +29,6 @@ echo
 echo
 echo
 #copy this list of containers image:tag and run any docker pull scripts to grab them all
-cat https://github.com/mjschmidt/helm-to-container.git
 ```
 
 #### Ignore this for now
