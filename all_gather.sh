@@ -4,8 +4,6 @@ pathtocharts=$(pwd)'/charts/'
 stablecharts=$pathtocharts'/stable'
 incubatorcharts=$pathtocharts'/incubator'
 
-#pull in latest changes
-git pull
 #clone helm charts to local folder
 git clone https://github.com/helm/charts.git
 
