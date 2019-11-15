@@ -95,13 +95,13 @@ sed -i "s/kubernetes-charts.storage.googleapis.com/$chartstoreurl\/stable/g"  $i
 sed -i "s/kubernetes-charts-incubator.storage.googleapis.com/$chartstoreurl\/incubator/g"  $indexfileincubator
 
 cd /tmp
-tar -cf ~/helm-charts.tar.gz  kubernetes-charts-incubator kubernetes-charts chartpics
+tar -cf ~/helm-charts.tar  kubernetes-charts-incubator kubernetes-charts chartpics
 rm -rf kubernetes-charts-incubator kubernetes-charts chartpics
 
 echo
 echo
 echo
-echo Your charts and pics are now in ~/helm-charts.tar.gz and ready to be moved to offline env
+echo Your charts and pics are now in ~/helm-charts.tar and ready to be moved to offline env
 echo The list of associated Docker images can be found in ~/closed-env-container-images.txt
 echo Reccomend you cat ~/closed-env-container-images.txt to list the image list on the screen for easy copy paste
 echo
