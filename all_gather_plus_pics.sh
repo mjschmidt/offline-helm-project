@@ -1,15 +1,18 @@
 #/bin/bash
+
+start=`date +%M`
+
 imagestoreurl=https://test.com
 chartstoreurl=test.com
 bucket=pics
 indexfilestable=/tmp/kubernetes-charts/index.yaml
 indexfileincubator=/tmp/kubernetes-charts-incubator/index.yaml
-pathtocharts=$(pwd)'/charts'
+pathtocharts=$(pwd)
 stablecharts=$pathtocharts'/stable'
 incubatorcharts=$pathtocharts'/incubator'
+bitnamicharts=$pathtocharts'/bitnami-charts'
 
-#clone helm charts to local folder
-git clone https://github.com/helm/charts.git
+
 
 #update help
 helm repo update
@@ -58,12 +61,61 @@ rm -rf /tmp/$f
 done
 rm all.incubator.charts.txt
 
+
+#bitnami charts gathering here
+rm -rf $bitnamicharts'-old'
+mv $bitnamicharts $bitnamicharts'-old'
+mkdir $bitnamicharts
+
+cd $bitnamicharts
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
+
+helm search repo bitnami --versions | cut -c -47 | grep -v NAME | awk '{$1=$1};1' | sed 's/ / --version /g' > fetch-bitnami.txt
+
+
+
+cat fetch-bitnami.txt | while read line
+do
+
+echo helm pull $line
+helm pull $line &
+sleep .5
+
+done
+curl -o index.yaml -L https://charts.bitnami.com/bitnami/index.yaml
+
+
+mv fetch-bitnami.txt ../
+cd ../
+echo $(pwd)
+ls $bitnamicharts > bitnami.charts.txt
+
+for f in `cat bitnami.charts.txt`;
+do
+echo
+echo
+echo
+echo
+echo writing out template /tmp/$f-final
+mkdir /tmp/$f-final
+helm template --output-dir /tmp/$f-final $bitnamicharts/$f
+grep -hR image: /tmp/$f-final >>./imagelist.txt
+rm -rf /tmp/$f-final
+rm -rf /tmp/$f
+done
+rm bitnami.charts.txt
+
+
+
+
 #Clean up container list
 cat imagelist.txt |sed 's/^.*\(image.*\).*$/\1/' |sed 's/image://' |sed 's/\"//g' |grep -v "'" |sort |uniq  >~/closed-env-container-images.txt
 rm imagelist.txt
 
 mv kubernetes-charts /tmp/
 mv kubernetes-charts-incubator /tmp/
+mv bitnami-charts /tmp/
 #tar stable and incubator charts
 #gsutil -m cp -R gs://kubernetes-charts .
 #gsutil -m cp -R gs://kubernetes-charts-incubator .
@@ -71,7 +123,8 @@ mv kubernetes-charts-incubator /tmp/
 #get the pics
 
 cat /tmp/kubernetes-charts/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_stable.txt; rm output.txt iconlist
-cat /tmp/kubernetes-charts-incubator/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_incubator.txt; rm output.txt iconlist
+cat /tmp/kubernetes-charts-incubator/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_incubator.txt; rm output.txt iconlist
+cat /tmp/bitnami-charts/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_incubator.txt; rm output.txt iconlist
 rm -rf /tmp/chartpics/
 mkdir -p /tmp/chartpics/ 
 for f in `cat imagelist_stable.txt`;
@@ -93,10 +146,11 @@ curl -o /tmp/chartpics/$(echo $f | sed 's/https\:\/\///g' | sed 's/\//-/g') $f
 done
 sed -i "s/kubernetes-charts.storage.googleapis.com/$chartstoreurl\/stable/g"  $indexfilestable
 sed -i "s/kubernetes-charts-incubator.storage.googleapis.com/$chartstoreurl\/incubator/g"  $indexfileincubator
+sed -i "s/charts.bitnami.com/$chartstoreurl\/g"  $indexfileincubator
 
 cd /tmp
-tar -cf ~/helm-charts.tar  kubernetes-charts-incubator kubernetes-charts chartpics
-rm -rf kubernetes-charts-incubator kubernetes-charts chartpics
+tar -cf ~/helm-charts.tar  kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts
+rm -rf kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts
 
 echo
 echo
@@ -111,3 +165,11 @@ cd $pathtocharts
 cd ../
 rm -rf ./charts
 rm stable.charts.txt incubator.charts.txt imagelist_incubator.txt  imagelist_stable.txt
+
+end=`date +%M`
+
+runtime=$((end-start))
+echo
+echo
+echo 'your run time was ' $runtime
+
