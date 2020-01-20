@@ -1,12 +1,13 @@
 #/bin/bash
 
-start=`date +%M`
+start=`date +%s`
 
 imagestoreurl=https://test.com
 chartstoreurl=test.com
 bucket=pics
 indexfilestable=/tmp/kubernetes-charts/index.yaml
 indexfileincubator=/tmp/kubernetes-charts-incubator/index.yaml
+indexfilebitnami=/tmp/bitnami-charts/index.yaml
 pathtocharts=$(pwd)
 stablecharts=$pathtocharts'/stable'
 incubatorcharts=$pathtocharts'/incubator'
@@ -85,6 +86,7 @@ sleep .5
 done
 curl -o index.yaml -L https://charts.bitnami.com/bitnami/index.yaml
 
+#get the image lisr from bitnami
 
 mv fetch-bitnami.txt ../
 cd ../
@@ -106,25 +108,27 @@ rm -rf /tmp/$f
 done
 rm bitnami.charts.txt
 
-
+#end fetch bitnami charts
 
 
 #Clean up container list
 cat imagelist.txt |sed 's/^.*\(image.*\).*$/\1/' |sed 's/image://' |sed 's/\"//g' |grep -v "'" |sort |uniq  >~/closed-env-container-images.txt
 rm imagelist.txt
 
+
+#move chart files to tmp foler for processing
+
 mv kubernetes-charts /tmp/
 mv kubernetes-charts-incubator /tmp/
 mv bitnami-charts /tmp/
-#tar stable and incubator charts
-#gsutil -m cp -R gs://kubernetes-charts .
-#gsutil -m cp -R gs://kubernetes-charts-incubator .
 
-#get the pics
+#end moving fetched helm charts to /tmp/
+
+#get the pics usint a serioes of for loops
 
 cat /tmp/kubernetes-charts/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_stable.txt; rm output.txt iconlist
 cat /tmp/kubernetes-charts-incubator/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_incubator.txt; rm output.txt iconlist
-cat /tmp/bitnami-charts/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_incubator.txt; rm output.txt iconlist
+cat /tmp/bitnami-charts/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_bitnami.txt; rm output.txt iconlist
 rm -rf /tmp/chartpics/
 mkdir -p /tmp/chartpics/ 
 for f in `cat imagelist_stable.txt`;
@@ -133,7 +137,7 @@ d=`echo $f |sed 's/https\:\/\///g' | sed 's/\//-/g'`
 j=$(echo $f |  sed 's;/;\\/;g')
 sed -i "/icon: $j/c\    icon: $imagestoreurl/$bucket/$d" $indexfilestable
 echo go get image "### $(echo $f| sed 's|.*/||') ###";
-curl -o /tmp/chartpics/$(echo $f | sed 's/https\:\/\///g' | sed 's/\//-/g') $f
+curl -o /tmp/chartpics/$(echo $f | sed 's/https\:\/\///g' | sed 's/\//-/g') $f &
 done
 
 for f in `cat imagelist_incubator.txt`;
@@ -144,13 +148,35 @@ sed -i "/icon: $j/c\    icon: $imagestoreurl/$bucket/$d" $indexfileincubator
 echo go get image "### $(echo $f| sed 's|.*/||') ###";
 curl -o /tmp/chartpics/$(echo $f | sed 's/https\:\/\///g' | sed 's/\//-/g') $f
 done
+
+
+for f in `cat imagelist_bitnami.txt`;
+do
+d=`echo $f |sed 's/https\:\/\///g' | sed 's/\//-/g'`
+j=$(echo $f |  sed 's;/;\\/;g')
+sed -i "/icon: $j/c\    icon: $imagestoreurl/$bucket/$d" $indexfilebitnami
+echo go get image "### $(echo $f| sed 's|.*/||') ###";
+curl -o /tmp/chartpics/$(echo $f | sed 's/https\:\/\///g' | sed 's/\//-/g') $f
+done
+
+# end of the get the pictures section
+
+
+#this section is for fixing the index files, right now I am not confident it does bitnami right but kubernetes and kubernetes incubator are correct
+
 sed -i "s/kubernetes-charts.storage.googleapis.com/$chartstoreurl\/stable/g"  $indexfilestable
 sed -i "s/kubernetes-charts-incubator.storage.googleapis.com/$chartstoreurl\/incubator/g"  $indexfileincubator
-sed -i "s/charts.bitnami.com/$chartstoreurl\/g"  $indexfileincubator
+sed -i "s/charts.bitnami.com/$chartstoreurl\/g"  $indexfilebitnami
+sed -i "s/bitnami.com/$chartstoreurl\/g"  $indexfilebitnami
 
+# end of indexfile fixting seciton
+
+#create the tar file and clean up list files
 cd /tmp
 tar -cf ~/helm-charts.tar  kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts
 rm -rf kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts
+
+#end of clean up and tar creation
 
 echo
 echo
@@ -164,12 +190,14 @@ echo
 cd $pathtocharts
 cd ../
 rm -rf ./charts
-rm stable.charts.txt incubator.charts.txt imagelist_incubator.txt  imagelist_stable.txt
+cd $pathtocharts
+rm stable.charts.txt incubator.charts.txt imagelist_incubator.txt  imagelist_stable.txt fetch-bitnami.txt 
 
-end=`date +%M`
+end=`date +%s`
 
 runtime=$((end-start))
+runtime_in_minutes=$runtime/60
 echo
 echo
-echo 'your run time was ' $runtime
+echo 'your run time was ' $runtime_in_minutes ' minutes!'
 
