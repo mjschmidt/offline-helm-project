@@ -7,11 +7,13 @@ This is and always will be a Free and Open Source Project
 * helm
 * gsutil
 
+### How to install helm 3 on your machine
 ```
 #helm is not included in this git project
 sudo cp tools/helm /usr/bin/
 ```
-* For all_gather.sh: gsutil
+
+### Install and login to Google Cloud to use gsutil
 ```
 #install gsutil
 curl https://sdk.cloud.google.com | bash
@@ -20,7 +22,7 @@ gcloud init
 #use helmprojectoffline@gmail.com as the login account
 ```
 
-### Usage
+### Script Usage
 First get your helm Charts and List of Associated Docker Containers and the Pictures associated with the charts using this script
 ```
 ./all_gather_plus_pics.sh
