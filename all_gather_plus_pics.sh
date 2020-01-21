@@ -1,39 +1,59 @@
 #/bin/bash
 
+#This script has a few for loops that are run multiple times that could probably be made into a function in the future where parameters are passed in a more resonable way. For now, this works... It takes about an hour to run bbecause helm pull is so slow. Google had a distributed pull tool that helped make those much faster, but bitnami charts are still VERY slow... we should explore some sort of distributed curl or wget tool in the future... I think there is a library written in Go we map eventually be able to use?
+
+#Start your engines
 start=`date +%s`
 
+#set global variables
 imagestoreurl=https://test.com
 chartstoreurl=test.com
 bucket=pics
-indexfilestable=/tmp/kubernetes-charts/index.yaml
-indexfileincubator=/tmp/kubernetes-charts-incubator/index.yaml
-indexfilebitnami=/tmp/bitnami-charts/index.yaml
 pathtocharts=$(pwd)
+
+#set helm chart stable variables
+indexfilestable=/tmp/kubernetes-charts/index.yaml
 stablecharts=$pathtocharts'/stable'
+
+#set helm chart incubator variables
+indexfileincubator=/tmp/kubernetes-charts-incubator/index.yaml
 incubatorcharts=$pathtocharts'/incubator'
+
+#set bitnami helm chart variables & since bitnami takes so long, in the future we'll only want to get the delta's so we want to keep track of the old list as well as the new list. For now, we don't do that, but setup for follow on work.
+indexfilebitnami=/tmp/bitnami-charts/index.yaml
 bitnamicharts=$pathtocharts'/bitnami-charts'
+rm -rf $bitnamicharts'-old'
+mv $bitnamicharts $bitnamicharts'-old'
+mkdir $bitnamicharts
 
 
+
+
+#move latest verison of helm to usr bin
+sudo mv /usr/bin/helm /usr/bin/helm_old
+sudo cp tool/helm /usr/bin/helm
 
 #update help
 helm repo update
 
-#generate stable charts list
-rm stable.charts.txt
-ls $stablecharts > stable.charts.txt
+#I think this stuff is old and can be deleted
+#rm stable.charts.txt
+#ls $stablecharts > stable.charts.txt
 
 
 #add invubator charts list
-rm incubator.charts.txt
-ls  $incubatorcharts  > incubator.charts.txt
+#rm incubator.charts.txt
+#ls  $incubatorcharts  > incubator.charts.txt
+#End area of "I think this stuff is old and can be deleted
 
-#Make directorys for .tgz
+
+#This tool is much faster than helm for gathering all the stable and incubator helm charts. Helm pull takes forever. Its worth it and is easy to configure (see readme)
 gsutil -m cp -R gs://kubernetes-charts .
 gsutil -m cp -R gs://kubernetes-charts-incubator .
 ls kubernetes-charts/ > all.stable.charts.txt
 ls kubernetes-charts-incubator/ > all.incubator.charts.txt
 
-#Loop through stable 
+#Loop through stable and template out all charts to be able to easily grab image and tags
 for f in `cat all.stable.charts.txt`;
 do 
 echo
@@ -49,7 +69,7 @@ rm -rf /tmp/$f
 done
 rm all.stable.charts.txt
 
-#Loop through incubator
+#Loop through incubator and template out all charts to be able to easily grab image and tags
 for f in `cat all.incubator.charts.txt`;
 do
 #helm fetch  --untar --untardir /tmp incubator/$f
@@ -64,18 +84,16 @@ rm all.incubator.charts.txt
 
 
 #bitnami charts gathering here
-rm -rf $bitnamicharts'-old'
-mv $bitnamicharts $bitnamicharts'-old'
-mkdir $bitnamicharts
-
 cd $bitnamicharts
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 
+#This command finds every version of every helm chart and puts it into a file where we can actually do something with it
 helm search repo bitnami --versions | cut -c -47 | grep -v NAME | awk '{$1=$1};1' | sed 's/ / --version /g' > fetch-bitnami.txt
 
 
-
+#This loop goes through and pulls all the helm charts. It should be made faster in the future with some sort of distributed pull tool. 
+#You can't just run helm pull as background processes because things break and not all charts are pulled.
 cat fetch-bitnami.txt | while read line
 do
 
@@ -84,15 +102,18 @@ helm pull $line &
 sleep .5
 
 done
+#curl down the bitnami index file
 curl -o index.yaml -L https://charts.bitnami.com/bitnami/index.yaml
 
-#get the image lisr from bitnami
+#Loop through stable and template out all charts to be able to easily grab image and tags
 
+#get the list of all the charts for the same type of for loop as we do with stable and incubator
 mv fetch-bitnami.txt ../
 cd ../
 echo $(pwd)
 ls $bitnamicharts > bitnami.charts.txt
 
+#Loop through bitnami and template out all charts to be able to easily grab image and tags
 for f in `cat bitnami.charts.txt`;
 do
 echo
