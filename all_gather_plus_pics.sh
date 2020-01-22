@@ -187,13 +187,14 @@ done
 
 sed -i "s/kubernetes-charts.storage.googleapis.com/$chartstoreurl\/stable/g"  $indexfilestable
 sed -i "s/kubernetes-charts-incubator.storage.googleapis.com/$chartstoreurl\/incubator/g"  $indexfileincubator
-sed -i "s/charts.bitnami.com/$chartstoreurl\/g"  $indexfilebitnami
-sed -i "s/bitnami.com/$chartstoreurl\/g"  $indexfilebitnami
+sed -i "s/charts.bitnami.com/$chartstoreurl/g" $indexfilebitnami
+sed -i "s/bitnami.com/$chartstoreurl\/g" $indexfilebitnami
 
 # end of indexfile fixting seciton
 
 #create the tar file and clean up list files
 cd /tmp
+sed -i "s/charts.bitnami.com/$chartstoreurl/g" bitnami-charts/index.yaml
 tar -cf ~/helm-charts.tar  kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts
 rm -rf kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts
 
@@ -212,12 +213,12 @@ cd $pathtocharts
 cd ../
 rm -rf ./charts
 cd $pathtocharts
-rm stable.charts.txt incubator.charts.txt imagelist_incubator.txt  imagelist_stable.txt fetch-bitnami.txt 
+rm stable.charts.txt incubator.charts.txt imagelist_incubator.txt  imagelist_stable.txt fetch-bitnami.txt imagelist_bitnami.txt 
 
 end=`date +%s`
 
 runtime=$((end-start))
-runtime_in_minutes=$runtime/60
+runtime_in_minutes=$(( $runtime / 60 ))
 echo
 echo
 echo 'your run time was ' $runtime_in_minutes ' minutes!'
