@@ -26,12 +26,18 @@ rm -rf $bitnamicharts'-old'
 mv $bitnamicharts $bitnamicharts'-old'
 mkdir $bitnamicharts
 
+#set vmware helm chart variables & since vmware takes so long, in the future we'll only want to get the delta's so we want to keep track of the old list as well as the new list. For now, we don't do that, but setup for follow on work.
+indexfilevmware=/tmp/vmware-charts/index.yaml
+vmwarecharts=$pathtocharts'/vmware-charts'
+rm -rf $vmwarecharts'-old'
+mv $vmwarecharts $vmwarecharts'-old'
+mkdir $vmwarecharts
 
 
 
 #move latest verison of helm to usr bin
 sudo mv /usr/bin/helm /usr/bin/helm_old
-sudo cp tool/helm /usr/bin/helm
+sudo cp $pathtocharts/tool/helm /usr/bin/helm
 
 #update help
 helm repo update
@@ -131,6 +137,59 @@ rm bitnami.charts.txt
 
 #end fetch bitnami charts
 
+#vmware charts gathering here
+cd $vmwarecharts
+helm repo add vmware https://vmware-tanzu.github.io/helm-charts
+helm repo update
+
+#This command finds every version of every helm chart and puts it into a file where we can actually do something with it
+helm search repo vmware/ --versions | cut -c -25 | grep -v NAME | awk '{$1=$1};1' | sed 's/ / --version /g' > fetch-vmware.txt
+
+
+#This loop goes through and pulls all the helm charts. It should be made faster in the future with some sort of distributed pull tool.
+#You can't just run helm pull as background processes because things break and not all charts are pulled.
+cat fetch-vmware.txt | while read line
+do
+
+echo helm pull $line
+helm pull $line &
+sleep .5
+
+done
+#curl down the vmware index file
+curl -o index.yaml -L https://vmware-tanzu.github.io/helm-charts/index.yaml
+
+#Loop through stable and template out all charts to be able to easily grab image and tags
+
+#get the list of all the charts for the same type of for loop as we do with stable and incubator
+mv fetch-vmware.txt ../
+cd ../
+echo $(pwd)
+ls $vmwarecharts > vmware.charts.txt
+
+#Loop through vmware and template out all charts to be able to easily grab image and tags
+for f in `cat vmware.charts.txt`;
+do
+echo
+echo
+echo
+echo
+
+mkdir /tmp/$f-final
+#helm template --output-dir /tmp/$f-final $vmwarecharts/$f
+helm template --namespace velero --set configuration.provider=aws --set configuration.backupStorageLocation.name=aws --set configuration.backupStorageLocation.bucket=bucket --set configuration.backupStorageLocation.config.region=region --set configuration.volumeSnapshotLocation.name=whatever --set configuration.volumeSnapshotLocation.config.region=region --set image.repository=velero/velero --set image.tag=v1.2.0 --set image.pullPolicy=IfNotPresent --set initContainers[0].name=velero-plugin-for-aws --set initContainers[0].image=velero/velero-plugin-for-aws:v1.0.0 --set initContainers[0].volumeMounts[0].mountPath=/target --output-dir /tmp/$f-final $vmwarecharts/$f
+grep -hR image: /tmp/$f-final >>./imagelist.txt
+cp $vmwarecharts/$f .
+tar xvf $f
+grep -hR image: |grep -v Values |grep -v Binary |grep -v .list |grep -v .txt |sed 's/^.*\(image.*\).*$/\1/' |sed 's/image://' |sed 's/\"//g' |sed 's/\#//g' |sed 's/ //g' |grep -v "'" |sort |uniq >>./imagelist.txt
+rm -rf $f
+rm -rf /tmp/$f-final
+rm -rf /tmp/$f
+done
+rm vmware.charts.txt
+
+#end fetch vmware charts
+
 
 #Clean up container list
 cat imagelist.txt |sed 's/^.*\(image.*\).*$/\1/' |sed 's/image://' |sed 's/\"//g' |grep -v "'" |sort |uniq  >~/closed-env-container-images.txt
@@ -142,6 +201,7 @@ rm imagelist.txt
 mv kubernetes-charts /tmp/
 mv kubernetes-charts-incubator /tmp/
 mv bitnami-charts /tmp/
+mv vmware-charts /tmp/
 
 #end moving fetched helm charts to /tmp/
 
@@ -150,8 +210,11 @@ mv bitnami-charts /tmp/
 cat /tmp/kubernetes-charts/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_stable.txt; rm output.txt iconlist
 cat /tmp/kubernetes-charts-incubator/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_incubator.txt; rm output.txt iconlist
 cat /tmp/bitnami-charts/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_bitnami.txt; rm output.txt iconlist
+cat /tmp/vmware-charts/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_vmware.txt; rm output.txt iconlist
 rm -rf /tmp/chartpics/
 mkdir -p /tmp/chartpics/ 
+
+#grab stable pictures and icons
 for f in `cat imagelist_stable.txt`;
 do
 d=`echo $f |sed 's/https\:\/\///g' | sed 's/\//-/g'`
@@ -161,6 +224,7 @@ echo go get image "### $(echo $f| sed 's|.*/||') ###";
 curl -o /tmp/chartpics/$(echo $f | sed 's/https\:\/\///g' | sed 's/\//-/g') $f &
 done
 
+#grab incubator pictures and icons
 for f in `cat imagelist_incubator.txt`;
 do
 d=`echo $f |sed 's/https\:\/\///g' | sed 's/\//-/g'`
@@ -170,12 +234,22 @@ echo go get image "### $(echo $f| sed 's|.*/||') ###";
 curl -o /tmp/chartpics/$(echo $f | sed 's/https\:\/\///g' | sed 's/\//-/g') $f
 done
 
-
+#Grab bitnami pictures and icons
 for f in `cat imagelist_bitnami.txt`;
 do
 d=`echo $f |sed 's/https\:\/\///g' | sed 's/\//-/g'`
 j=$(echo $f |  sed 's;/;\\/;g')
 sed -i "/icon: $j/c\    icon: $imagestoreurl/$bucket/$d" $indexfilebitnami
+echo go get image "### $(echo $f| sed 's|.*/||') ###";
+curl -o /tmp/chartpics/$(echo $f | sed 's/https\:\/\///g' | sed 's/\//-/g') $f
+done
+
+#Grab vmware pictures and icons
+for f in `cat imagelist_vmware.txt`;
+do
+d=`echo $f |sed 's/https\:\/\///g' | sed 's/\//-/g'`
+j=$(echo $f |  sed 's;/;\\/;g')
+sed -i "/icon: $j/c\    icon: $imagestoreurl/$bucket/$d" $indexfilevmware
 echo go get image "### $(echo $f| sed 's|.*/||') ###";
 curl -o /tmp/chartpics/$(echo $f | sed 's/https\:\/\///g' | sed 's/\//-/g') $f
 done
@@ -189,14 +263,18 @@ sed -i "s/kubernetes-charts.storage.googleapis.com/$chartstoreurl\/stable/g"  $i
 sed -i "s/kubernetes-charts-incubator.storage.googleapis.com/$chartstoreurl\/incubator/g"  $indexfileincubator
 sed -i "s/charts.bitnami.com/$chartstoreurl/g" $indexfilebitnami
 sed -i "s/bitnami.com/$chartstoreurl\/g" $indexfilebitnami
+sed -i "s/vmware-tanzu.github.io\/helm-charts/$chartstoreurl\/vmware/g" $indexfilevmware
 
 # end of indexfile fixting seciton
 
 #create the tar file and clean up list files
 cd /tmp
-sed -i "s/charts.bitnami.com/$chartstoreurl/g" bitnami-charts/index.yaml
-tar -cf ~/helm-charts.tar  kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts
-rm -rf kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts
+
+#i think this is just a duplicate command of above now
+#sed -i "s/charts.bitnami.com/$chartstoreurl/g" bitnami-charts/index.yaml
+
+tar -cf ~/helm-charts.tar  kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts vmware-charts
+rm -rf kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts vmware-charts
 
 #end of clean up and tar creation
 
@@ -213,7 +291,7 @@ cd $pathtocharts
 cd ../
 rm -rf ./charts
 cd $pathtocharts
-rm stable.charts.txt incubator.charts.txt imagelist_incubator.txt  imagelist_stable.txt fetch-bitnami.txt imagelist_bitnami.txt 
+rm stable.charts.txt incubator.charts.txt imagelist_incubator.txt  imagelist_stable.txt fetch-bitnami.txt imagelist_bitnami.txt fetch-vmware.txt imagelist_vmware.txt
 
 end=`date +%s`
 
