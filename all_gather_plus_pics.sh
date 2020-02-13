@@ -26,6 +26,30 @@ rm -rf $bitnamicharts'-old'
 mv $bitnamicharts $bitnamicharts'-old'
 mkdir $bitnamicharts
 
+#set rook-ceph helm chart variables.
+indexfilerookceph=/tmp/rookceph-charts/index.yaml
+rookcephcharts=$pathtocharts'/rookceph-charts'
+rm -rf $rookcephcharts'-old'
+mv $rookcephcharts $rookcephcharts'-old'
+mkdir $rookcephcharts
+
+
+#set ranchestable helm chart variables.
+indexfilerancherstable=/tmp/rancherstable-charts/index.yaml
+rancherstablecharts=$pathtocharts'/rancherstable-charts'
+rm -rf $rancherstablecharts'-old'
+mv $rancherstablecharts $rancherstablecharts'-old'
+mkdir $rancherstablecharts
+
+#set rancherlatest helm chart variables.
+indexfilerancherlatest=/tmp/rancherlatest-charts/index.yaml
+rancherlatestcharts=$pathtocharts'/rancherlatest-charts'
+rm -rf $rancherlatestcharts'-old'
+mv $rancherlatestcharts $rancherlatestcharts'-old'
+mkdir $rancherlatestcharts
+
+
+
 #set vmware helm chart variables & since vmware takes so long, in the future we'll only want to get the delta's so we want to keep track of the old list as well as the new list. For now, we don't do that, but setup for follow on work.
 indexfilevmware=/tmp/vmware-charts/index.yaml
 vmwarecharts=$pathtocharts'/vmware-charts'
@@ -88,11 +112,150 @@ rm -rf /tmp/$f
 done
 rm all.incubator.charts.txt
 
+#rook-ceph
+cd $rookcephcharts
+helm repo add rook-release https://charts.rook.io/release
+helm repo update
+#This command finds every version of every helm chart and puts it into a file where we can actually do something with it
+helm search repo rook-release --versions | cut -c -47 | grep -v NAME | awk '{$1=$1};1' | sed 's/ / --version /g' > fetch-rookceph.txt
+
+
+#This loop goes through and pulls all the helm charts. It should be made faster in the future with some sort of distributed pull tool.
+#You can't just run helm pull as background processes because things break and not all charts are pulled.
+
+
+curl -L  https://charts.rook.io/release/index.yaml | grep -v icon: | grep -v home | grep tgz | cut -c 7- |xargs -P 10 -n 1 wget
+
+
+#curl down the rookcephindex file
+curl -o index.yaml -L https://charts.rook.io/release/index.yaml
+
+#Loop through stable and template out all charts to be able to easily grab image and tags
+
+#get the list of all the charts for the same type of for loop as we do with stable and incubator
+mv fetch-rookceph.txt ../
+cd ../
+echo $(pwd)
+ls $rookcephcharts > rookceph.charts.txt
+
+#Loop through rookceph and template out all charts to be able to easily grab image and tags
+for f in `cat rookceph.charts.txt`;
+do
+echo
+echo
+echo
+echo
+echo writing out template /tmp/$f-final
+mkdir /tmp/$f-final
+helm template --output-dir /tmp/$f-final $rookcephcharts/$f
+grep -hR image: /tmp/$f-final >>./imagelist.txt
+rm -rf /tmp/$f-final
+rm -rf /tmp/$f
+done
+rm rookceph.charts.txt
+
+#end fetch rookceph charts
+
+
+#Rancher Stable
+cd $rancherstablecharts
+helm repo add rancher-stable https://releases.rancher.com/server-charts/stable
+helm repo update
+#This command finds every version of every helm chart and puts it into a file where we can actually do something with it
+helm search repo rancher-stable  --versions | cut -c -47 | grep -v NAME | awk '{$1=$1};1' | sed 's/ / --version /g' > fetch-rancherstable.txt
+
+
+#This loop goes through and pulls all the helm charts. It should be made faster in the future with some sort of distributed pull tool.
+#You can't just run helm pull as background processes because things break and not all charts are pulled.
+
+
+curl -L  https://releases.rancher.com/server-charts/stable/index.yaml | grep -v icon: | grep -v home | grep tgz | cut -c 7- | sed 's/^/https:\/\/releases.rancher.com\/server-charts\/stable\//'  |xargs -P 10 -n 1 wget
+
+
+#curl down the rookcephindex file
+curl -o index.yaml -L https://releases.rancher.com/server-charts/stable/index.yaml 
+
+#Loop through stable and template out all charts to be able to easily grab image and tags
+
+#get the list of all the charts for the same type of for loop as we do with stable and incubator
+mv fetch-rancherstable.txt ../
+cd ../
+echo $(pwd)
+ls $rancherstablecharts > rancherstable.charts.txt
+
+
+
+#Loop through rookceph and template out all charts to be able to easily grab image and tags
+for f in `cat rancherstable.charts.txt`;
+do
+echo
+echo
+echo
+echo
+echo writing out template /tmp/$f-final
+mkdir /tmp/$f-final
+helm template --output-dir /tmp/$f-final $rancherstablecharts/$f
+grep -hR image: /tmp/$f-final >>./imagelist.txt
+rm -rf /tmp/$f-final
+done
+rm -rf /tmp/$f
+rm rancherstable.charts.txt
+
+#end fetch rancherstable charts
+
+
+
+#Rancher  latest
+cd $rancherlatestcharts
+helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
+helm repo update
+#This command finds every version of every helm chart and puts it into a file where we can actually do something with it
+helm search repo rancher-latest  --versions | cut -c -47 | grep -v NAME | awk '{$1=$1};1' | sed 's/ / --version /g' > fetch-rancherlatest.txt
+
+
+#This loop goes through and pulls all the helm charts. It should be made faster in the future with some sort of distributed pull tool.
+#You can't just run helm pull as background processes because things break and not all charts are pulled.
+
+curl -L  https://releases.rancher.com/server-charts/latest/index.yaml | grep -v icon: | grep -v home | grep tgz | cut -c 7- | sed 's/^/https:\/\/releases.rancher.com\/server-charts\/latest\//'  |xargs -P 10 -n 1 wget
+
+
+#curl down the rancherlatestindex file
+curl -o index.yaml -L https://releases.rancher.com/server-charts/latest/index.yaml
+
+#Loop through stable and template out all charts to be able to easily grab image and tags
+
+#get the list of all the charts for the same type of for loop as we do with stable and incubator
+mv fetch-rancherlatest.txt ../
+cd ../
+echo $(pwd)
+ls $rancherlatestcharts > rancherlatest.charts.txt
+
+
+#Loop through rancher-latest and template out all charts to be able to easily grab image and tags
+for f in `cat rancherlatest.charts.txt`;
+do
+echo
+echo
+echo
+echo
+echo writing out template /tmp/$f-final
+mkdir /tmp/$f-final
+helm template --output-dir /tmp/$f-final $rancherlatestcharts/$f
+grep -hR image: /tmp/$f-final >>./imagelist.txt
+rm -rf /tmp/$f-final
+rm -rf /tmp/$f
+done
+rm rancherlatest.charts.txt
+
+#end fetch rancherlatest charts
+
+
 
 #bitnami charts gathering here
 cd $bitnamicharts
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
+
 
 #This command finds every version of every helm chart and puts it into a file where we can actually do something with it
 helm search repo bitnami --versions | cut -c -47 | grep -v NAME | awk '{$1=$1};1' | sed 's/ / --version /g' > fetch-bitnami.txt
@@ -100,14 +263,9 @@ helm search repo bitnami --versions | cut -c -47 | grep -v NAME | awk '{$1=$1};1
 
 #This loop goes through and pulls all the helm charts. It should be made faster in the future with some sort of distributed pull tool. 
 #You can't just run helm pull as background processes because things break and not all charts are pulled.
-cat fetch-bitnami.txt | while read line
-do
 
-echo helm pull $line
-helm pull $line &
-sleep .5
+curl -L https://charts.bitnami.com/bitnami/index.yaml | grep -v icon: | grep -v home | grep tgz | cut -c 7- |xargs -P 10 -n 1 wget
 
-done
 #curl down the bitnami index file
 curl -o index.yaml -L https://charts.bitnami.com/bitnami/index.yaml
 
@@ -148,14 +306,11 @@ helm search repo vmware/ --versions | cut -c -25 | grep -v NAME | awk '{$1=$1};1
 
 #This loop goes through and pulls all the helm charts. It should be made faster in the future with some sort of distributed pull tool.
 #You can't just run helm pull as background processes because things break and not all charts are pulled.
-cat fetch-vmware.txt | while read line
-do
 
-echo helm pull $line
-helm pull $line &
-sleep .5
+curl -L https://vmware-tanzu.github.io/helm-charts/index.yaml | grep -v icon: | grep -v home | grep tgz | cut -c 7- |xargs -P 10 -n 1 wget
 
-done
+
+
 #curl down the vmware index file
 curl -o index.yaml -L https://vmware-tanzu.github.io/helm-charts/index.yaml
 
@@ -202,12 +357,19 @@ mv kubernetes-charts /tmp/
 mv kubernetes-charts-incubator /tmp/
 mv bitnami-charts /tmp/
 mv vmware-charts /tmp/
+mv rookceph-charts /tmp/
+mv rancherlatest-charts /tmp/
+mv rancherstable-charts /tmp/
 
 #end moving fetched helm charts to /tmp/
 
 #get the pics usint a serioes of for loops
 
+cat /tmp/rancherlatest-charts/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_rancherlatest.txt; rm output.txt iconlist
+cat /tmp/rancherstable-charts/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_rancherstable.txt; rm output.txt iconlist
 cat /tmp/kubernetes-charts/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_stable.txt; rm output.txt iconlist
+cat /tmp/rookceph-charts/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_rookceph.txt; rm output.txt iconlist
+cat /tmp/rookceph-charts/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_rookceph.txt; rm output.txt iconlist
 cat /tmp/kubernetes-charts-incubator/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_incubator.txt; rm output.txt iconlist
 cat /tmp/bitnami-charts/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_bitnami.txt; rm output.txt iconlist
 cat /tmp/vmware-charts/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_vmware.txt; rm output.txt iconlist
@@ -216,6 +378,39 @@ mkdir -p /tmp/chartpics/
 
 #grab stable pictures and icons
 for f in `cat imagelist_stable.txt`;
+do
+d=`echo $f |sed 's/https\:\/\///g' | sed 's/\//-/g'`
+j=$(echo $f |  sed 's;/;\\/;g')
+sed -i "/icon: $j/c\    icon: $imagestoreurl/$bucket/$d" $indexfilestable
+echo go get image "### $(echo $f| sed 's|.*/||') ###";
+curl -o /tmp/chartpics/$(echo $f | sed 's/https\:\/\///g' | sed 's/\//-/g') $f &
+done
+
+
+#grab rancher-latest pictures and icons
+for f in `cat imagelist_rancherlatest.txt`;
+do
+d=`echo $f |sed 's/https\:\/\///g' | sed 's/\//-/g'`
+j=$(echo $f |  sed 's;/;\\/;g')
+sed -i "/icon: $j/c\    icon: $imagestoreurl/$bucket/$d" $indexfilerncherlatest
+echo go get image "### $(echo $f| sed 's|.*/||') ###";
+curl -o /tmp/chartpics/$(echo $f | sed 's/https\:\/\///g' | sed 's/\//-/g') $f &
+done
+
+#grab rancher-stable pictures and icons
+for f in `cat imagelist_rancherstable.txt`;
+do
+d=`echo $f |sed 's/https\:\/\///g' | sed 's/\//-/g'`
+j=$(echo $f |  sed 's;/;\\/;g')
+sed -i "/icon: $j/c\    icon: $imagestoreurl/$bucket/$d" $indexfilerancherstable
+echo go get image "### $(echo $f| sed 's|.*/||') ###";
+curl -o /tmp/chartpics/$(echo $f | sed 's/https\:\/\///g' | sed 's/\//-/g') $f &
+done
+
+
+
+#grab rookceph pictures and icons
+for f in `cat imagelist_rookceph.txt`;
 do
 d=`echo $f |sed 's/https\:\/\///g' | sed 's/\//-/g'`
 j=$(echo $f |  sed 's;/;\\/;g')
@@ -273,8 +468,8 @@ cd /tmp
 #i think this is just a duplicate command of above now
 #sed -i "s/charts.bitnami.com/$chartstoreurl/g" bitnami-charts/index.yaml
 
-tar -cf ~/helm-charts.tar  kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts vmware-charts
-rm -rf kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts vmware-charts
+tar -cf ~/helm-charts.tar  kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts vmware-charts rancherstable-charts rookceph-charts rancherstable-charts
+rm -rf kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts vmware-charts rancherstable-charts rookceph-charts rancherstable-charts
 
 #end of clean up and tar creation
 
