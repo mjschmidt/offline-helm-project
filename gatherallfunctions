@@ -339,6 +339,7 @@ curl -L https://vmware-tanzu.github.io/helm-charts/index.yaml | grep -v icon: | 
 
 #curl down the vmware index file
 curl -o index.yaml -L https://vmware-tanzu.github.io/helm-charts/index.yaml
+sed -i "s/\*//g" index.yaml
 
 #Loop through stable and template out all charts to be able to easily grab image and tags
 
@@ -402,7 +403,7 @@ cat /tmp/rancherlatest-charts/index.yaml | grep icon | sed 's/    icon: //g' > i
 cat /tmp/rancherstable-charts/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_rancherstable.txt; rm output.txt iconlist
 cat /tmp/kubernetes-charts-incubator/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_incubator.txt; rm output.txt iconlist
 cat /tmp/bitnami-charts/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_bitnami.txt; rm output.txt iconlist
-cat /tmp/vmware-charts/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_vmware.txt; rm output.txt iconlist
+cat /tmp/vmware-charts/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//'  > imagelist_vmware.txt; rm output.txt iconlist
 rm -rf /tmp/chartpics/
 mkdir -p /tmp/chartpics/ 
 
@@ -494,6 +495,7 @@ sed -i "s/bitnami.com/$chartstoreurl\/g" $indexfilebitnami
 sed -i "s/rancher-/\https:\/\/$chartstoreurl\/rancher-/g" $indexfilerancherstable
 sed -i "s/rancher-/\https:\/\/$chartstoreurl\/rancher-/g" $indexfilerancherlatest
 sed -i "s/vmware-tanzu.github.io\/helm-charts/$chartstoreurl\/vmware/g" $indexfilevmware
+sed -i "s/github.com\/vmware-tanzu\/helm-charts\/releases\/download\/.*\//$chartstoreurl\/vmware\//g" $indexfilevmware
 }
 # end of indexfile fixting seciton
 
@@ -525,35 +527,4 @@ cd $pathtocharts
 rm stable.charts.txt incubator.charts.txt imagelist_incubator.txt  imagelist_stable.txt fetch-bitnami.txt imagelist_bitnami.txt fetch-vmware.txt imagelist_vmware.txt imagelist_rookceph.txt imagelist_rancherlatest.txt imagelist_rancherstable.txt fetch-rancherlatest.txt fetch-rancherstable.txt fetch-rookceph.txt
 }
 
-
-#This sections calls each function
-
-
-#GETKUBECHARTS
-#GETKUBECHARTDEPS
-#GETROOKCHARTS
-#GETROOKCHARTDEPS
-#GETRANCHERSTABLECHARTS
-#GETRANCHERSTABLECHARTDEPS
-#GETRANCHERLATESTCHARTS
-#GETRANCHERLATESTCHARTDEPS
-#GETBITNAMICHARTS
-#GETBITNAMICHARTDEPS
-#GETVMWARECHARTS
-#GETVMWARECHARTDEPS
-#CLEANUP
-#the fixindexfiles function must be run before the chartpics function
-#FIXINDEXFILES
-#GETCHARTPICS
-#CREATETAR
-
-#end functions
-
-#end=`date +%s`
-
-#runtime=$((end-start))
-#runtime_in_minutes=$(( $runtime / 60 ))
-#echo
-#echo
-#echo 'your run time was ' $runtime_in_minutes ' minutes!'
 
