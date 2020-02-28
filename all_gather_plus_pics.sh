@@ -5,7 +5,6 @@
 #Start your engines
 start=`date +%s`
 
-
 #import functions
 source gatherallfunctions
 
