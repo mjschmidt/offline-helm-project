@@ -515,8 +515,9 @@ echo
 echo
 echo
 echo Your charts and pics are now in ~/helm-charts.tar and ready to be moved to offline env
-echo The list of associated Docker images can be found in ~/closed-env-container-images.txt
-echo Reccomend you cat ~/closed-env-container-images.txt to list the image list on the screen for easy copy paste
+echo The list of associated Docker images can be found in s3://rancher-container-list/closed-env-container-images.txt
+echo Reccomend you run "' aws s3 cp s3://rancher-container-list/closed-env-container-images.txt -'"  to list the image list on the screen for easy copy paste
+echo The list of new associated Docker images can be found in s3://rancher-container-list/uniqnew-closed-env-container-images.txt
 echo
 
 
@@ -527,4 +528,31 @@ cd $pathtocharts
 rm stable.charts.txt incubator.charts.txt imagelist_incubator.txt  imagelist_stable.txt fetch-bitnami.txt imagelist_bitnami.txt fetch-vmware.txt imagelist_vmware.txt imagelist_rookceph.txt imagelist_rancherlatest.txt imagelist_rancherstable.txt fetch-rancherlatest.txt fetch-rancherstable.txt fetch-rookceph.txt
 }
 
+#copy closed-env-container-images.txt to an s3 bucket and rotate old files
+function S3BUCKET {
+aws s3 cp s3://rancher-container-list/closed-env-container-images.txt3 s3://rancher-container-list/closed-env-container-images.txt4
+aws s3 cp s3://rancher-container-list/closed-env-container-images.txt2 s3://rancher-container-list/closed-env-container-images.txt3
+aws s3 cp s3://rancher-container-list/closed-env-container-images.txt1 s3://rancher-container-list/closed-env-container-images.txt2
+aws s3 cp s3://rancher-container-list/closed-env-container-images.txt s3://rancher-container-list/closed-env-container-images.txt1
+aws s3 cp ~/closed-env-container-images.txt  s3://rancher-container-list/
+
+aws s3 cp s3://rancher-container-list/ /tmp/ --recursive
+
+grep -Fxvf /tmp/closed-env-container-images.txt4 /tmp/closed-env-container-images.txt >new-closed-env-container-images.txt
+grep -Fxvf /tmp/closed-env-container-images.txt3/tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
+grep -Fxvf /tmp/closed-env-container-images.txt2 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
+grep -Fxvf /tmp/closed-env-container-images.txt1 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
+
+cat new-closed-env-container-images.txt |sort |uniq  >uniqnew-closed-env-container-images.txt
+
+rm /tmp/closed-env-container-images.txt
+rm /tmp/closed-env-container-images.txt1
+rm /tmp/closed-env-container-images.txt2
+rm /tmp/closed-env-container-images.txt3
+rm /tmp/closed-env-container-images.txt4
+
+aws s3 cp uniqnew-closed-env-container-images.txt s3://rancher-container-list/
+rm uniqnew-closed-env-container-images.txt
+rm new-closed-env-container-images.txt
+}
 

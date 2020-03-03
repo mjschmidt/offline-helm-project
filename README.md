@@ -6,6 +6,7 @@ This is and always will be a Free and Open Source Project
 * git
 * helm
 * gsutil
+* awscli
 
 ### How to install helm 3 on your machine
 ```
