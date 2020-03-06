@@ -376,7 +376,7 @@ rm vmware.charts.txt
 
 function CLEANUP {
 #Clean up container list
-cat imagelist.txt |sed 's/^.*\(image.*\).*$/\1/' |sed 's/image://' |sed 's/\"//g' |grep -v "'" |sort |uniq  >~/closed-env-container-images.txt
+cat imagelist.txt |sed 's/^.*\(image.*\).*$/\1/' |sed 's/image://' |sed 's/\"//g' |grep -v "'" |sed 's/^ *//;s/ *$//;s/  */ /;' |sort |uniq  >~/closed-env-container-images.txt
 rm imagelist.txt
 
 
@@ -489,11 +489,11 @@ function FIXINDEXFILES {
 
 sed -i "s/kubernetes-charts.storage.googleapis.com/$chartstoreurl\/stable/g"  $indexfilestable
 sed -i "s/kubernetes-charts-incubator.storage.googleapis.com/$chartstoreurl\/incubator/g"  $indexfileincubator
-sed -i "s/charts.rook.io/$chartstoreurl/g" $indexfilerookceph
+sed -i "s/charts.rook.io/$chartstoreurl\/rookceph/g" $indexfilerookceph
 sed -i "s/charts.bitnami.com/$chartstoreurl/g" $indexfilebitnami
-sed -i "s/bitnami.com/$chartstoreurl\/g" $indexfilebitnami
-sed -i "s/rancher-/\https:\/\/$chartstoreurl\/rancher-/g" $indexfilerancherstable
-sed -i "s/rancher-/\https:\/\/$chartstoreurl\/rancher-/g" $indexfilerancherlatest
+sed -i "s/bitnami.com/$chartstoreurl/g" $indexfilebitnami
+sed -i "s/rancher-/\https:\/\/$chartstoreurl\/rancherstable\//g" $indexfilerancherstable
+sed -i "s/rancher-/\https:\/\/$chartstoreurl\/rancherlatest\//g" $indexfilerancherlatest
 sed -i "s/vmware-tanzu.github.io\/helm-charts/$chartstoreurl\/vmware/g" $indexfilevmware
 sed -i "s/github.com\/vmware-tanzu\/helm-charts\/releases\/download\/.*\//$chartstoreurl\/vmware\//g" $indexfilevmware
 }
@@ -515,8 +515,8 @@ echo
 echo
 echo
 echo Your charts and pics are now in ~/helm-charts.tar and ready to be moved to offline env
-echo The list of associated Docker images can be found in s3://rancher-container-list/closed-env-container-images.txt
-echo Reccomend you run "' aws s3 cp s3://rancher-container-list/closed-env-container-images.txt -'"  to list the image list on the screen for easy copy paste
+echo The list of associated Docker images can be found in ~/closedcontainerfiles/closed-env-container-images.txt
+echo Reccomend you run "cat ~/closedcontainerfiles/closed-env-container-images.txt"  to list the image list on the screen for easy copy paste
 echo The list of new associated Docker images can be found in s3://rancher-container-list/uniqnew-closed-env-container-images.txt
 echo
 
@@ -553,6 +553,27 @@ rm /tmp/closed-env-container-images.txt4
 
 aws s3 cp uniqnew-closed-env-container-images.txt s3://rancher-container-list/
 rm uniqnew-closed-env-container-images.txt
+rm new-closed-env-container-images.txt
+}
+
+
+#copy closed-env-container-images.txt to an s3 bucket and rotate old files
+function LOCALLIST {
+mkdir ~/closedcontainerfiles
+mv ~/closedcontainerfiles/closed-env-container-images.txt3 ~/closedcontainerfiles/closed-env-container-images.txt4
+mv ~/closedcontainerfiles/closed-env-container-images.txt2 ~/closedcontainerfiles/closed-env-container-images.txt3
+mv ~/closedcontainerfiles/closed-env-container-images.txt1 ~/closedcontainerfiles/closed-env-container-images.txt2
+mv ~/closedcontainerfiles/closed-env-container-images.txt ~/closedcontainerfiles/closed-env-container-images.txt1
+mv ~/closed-env-container-images.txt ~/closedcontainerfiles/closed-env-container-images.txt
+
+grep -Fxvf ~/closedcontainerfiles/closed-env-container-images.txt4 ~/closedcontainerfiles/closed-env-container-images.txt >new-closed-env-container-images.txt
+grep -Fxvf ~/closedcontainerfiles/closed-env-container-images.txt3 ~/closedcontainerfiles/closed-env-container-images.txt >>new-closed-env-container-images.txt
+grep -Fxvf ~/closedcontainerfiles/closed-env-container-images.txt2 ~/closedcontainerfiles/closed-env-container-images.txt >>new-closed-env-container-images.txt
+grep -Fxvf ~/closedcontainerfiles/closed-env-container-images.txt1 ~/closedcontainerfiles/closed-env-container-images.txt >>new-closed-env-container-images.txt
+
+cat new-closed-env-container-images.txt |sort |uniq  >uniqnew-closed-env-container-images.txt
+
+mv uniqnew-closed-env-container-images.txt ~/closedcontainerfiles/uniqnew-closed-env-container-images.txt
 rm new-closed-env-container-images.txt
 }
 
