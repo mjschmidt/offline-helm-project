@@ -30,6 +30,8 @@ CLEANUP
 #the fixindexfiles function must be run before the chartpics function
 FIXINDEXFILES
 GETCHARTPICS
+#S3BUCKET
+LOCALLIST
 CREATETAR
 
 #end functions

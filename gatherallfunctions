@@ -88,39 +88,24 @@ helm repo update
 function GETKUBECHARTS {
 gsutil -m cp -R gs://kubernetes-charts .
 gsutil -m cp -R gs://kubernetes-charts-incubator .
-ls kubernetes-charts/ > all.stable.charts.txt
-ls kubernetes-charts-incubator/ > all.incubator.charts.txt
+ls -d kubernetes-charts/* > all.stable.charts.txt
+ls -d kubernetes-charts-incubator/* > all.incubator.charts.txt
 }
 
 function GETKUBECHARTDEPS {
 #Loop through stable and template out all charts to be able to easily grab image and tags
-for f in `cat all.stable.charts.txt`;
-do 
-echo
-echo
-echo
-echo
-echo writing out template
-mkdir /tmp/$f-final
-helm template --output-dir /tmp/$f-final kubernetes-charts/$f
-grep -hR image: /tmp/$f-final >>./imagelist.txt
-rm -rf /tmp/$f-final
-rm -rf /tmp/$f
-done
+
+
+cat all.stable.charts.txt |xargs -P 10 -n 1 helm template | grep image: >>imagelist.txt
+
 rm all.stable.charts.txt
 
 #Loop through incubator and template out all charts to be able to easily grab image and tags
-for f in `cat all.incubator.charts.txt`;
-do
-#helm fetch  --untar --untardir /tmp incubator/$f
-#helm fetch  -d /tmp/helm-charts-incubator incubator/$f
-mkdir /tmp/$f-final
-helm template --output-dir /tmp/$f-final kubernetes-charts-incubator/$f
-grep -hR image: /tmp/$f-final >>./imagelist.txt
-rm -rf /tmp/$f-final
-rm -rf /tmp/$f
-done
+
+cat all.incubator.charts.txt |xargs -P 10 -n 1 helm template | grep image: >>imagelist.txt
+
 rm all.incubator.charts.txt
+
 }
 
 function GETROOKCHARTS {
@@ -147,25 +132,15 @@ curl -o index.yaml -L https://charts.rook.io/release/index.yaml
 mv fetch-rookceph.txt ../
 cd ../
 echo $(pwd)
-ls $rookcephcharts > rookceph.charts.txt
+ls -d $rookcephcharts/* > rookceph.charts.txt
 
 }
 
 function GETROOKCHARTDEPS { 
 #Loop through rookceph and template out all charts to be able to easily grab image and tags
-for f in `cat rookceph.charts.txt`;
-do
-echo
-echo
-echo
-echo
-echo writing out template /tmp/$f-final
-mkdir /tmp/$f-final
-helm template --output-dir /tmp/$f-final $rookcephcharts/$f
-grep -hR image: /tmp/$f-final >>./imagelist.txt
-rm -rf /tmp/$f-final
-rm -rf /tmp/$f
-done
+
+cat rookceph.txt |xargs -P 10 -n 1 helm template | grep image: >>imagelist.txt
+
 rm rookceph.charts.txt
 
 }
@@ -197,24 +172,14 @@ curl -o index.yaml -L https://releases.rancher.com/server-charts/stable/index.ya
 mv fetch-rancherstable.txt ../
 cd ../
 echo $(pwd)
-ls $rancherstablecharts > rancherstable.charts.txt
+ls -d $rancherstablecharts/* > rancherstable.charts.txt
 }
 
 function GETRANCHERSTABLECHARTDEPS {
 #Loop through rookceph and template out all charts to be able to easily grab image and tags
-for f in `cat rancherstable.charts.txt`;
-do
-echo
-echo
-echo
-echo
-echo writing out template /tmp/$f-final
-mkdir /tmp/$f-final
-helm template --output-dir /tmp/$f-final $rancherstablecharts/$f
-grep -hR image: /tmp/$f-final >>./imagelist.txt
-rm -rf /tmp/$f-final
-done
-rm -rf /tmp/$f
+
+cat rancherstable.charts.txt |xargs -P 10 -n 1 helm template | grep image: >>imagelist.txt
+
 rm rancherstable.charts.txt
 
 }
@@ -246,25 +211,16 @@ curl -o index.yaml -L https://releases.rancher.com/server-charts/latest/index.ya
 mv fetch-rancherlatest.txt ../
 cd ../
 echo $(pwd)
-ls $rancherlatestcharts > rancherlatest.charts.txt
+ls -d $rancherlatestcharts/* > rancherlatest.charts.txt
 
 }
 
 function GETRANCHERLATESTCHARTDEPS {
 #Loop through rancher-latest and template out all charts to be able to easily grab image and tags
-for f in `cat rancherlatest.charts.txt`;
-do
-echo
-echo
-echo
-echo
-echo writing out template /tmp/$f-final
-mkdir /tmp/$f-final
-helm template --output-dir /tmp/$f-final $rancherlatestcharts/$f
-grep -hR image: /tmp/$f-final >>./imagelist.txt
-rm -rf /tmp/$f-final
-rm -rf /tmp/$f
-done
+
+cat rancherlatest.charts.txt |xargs -P 10 -n 1 helm template | grep image: >>imagelist.txt
+
+
 rm rancherlatest.charts.txt
 
 }
@@ -297,25 +253,15 @@ curl -o index.yaml -L https://charts.bitnami.com/bitnami/index.yaml
 mv fetch-bitnami.txt ../
 cd ../
 echo $(pwd)
-ls $bitnamicharts > bitnami.charts.txt
+ls -d $bitnamicharts/* > bitnami.charts.txt
 }
 
 function GETBITNAMICHARTDEPS {
 
 #Loop through bitnami and template out all charts to be able to easily grab image and tags
-for f in `cat bitnami.charts.txt`;
-do
-echo
-echo
-echo
-echo
-echo writing out template /tmp/$f-final
-mkdir /tmp/$f-final
-helm template --output-dir /tmp/$f-final $bitnamicharts/$f
-grep -hR image: /tmp/$f-final >>./imagelist.txt
-rm -rf /tmp/$f-final
-rm -rf /tmp/$f
-done
+
+cat bitnami.charts.txt |xargs -P 10 -n 1 helm template | grep image: >>imagelist.txt
+
 rm bitnami.charts.txt
 
 }
@@ -376,7 +322,7 @@ rm vmware.charts.txt
 
 function CLEANUP {
 #Clean up container list
-cat imagelist.txt |sed 's/^.*\(image.*\).*$/\1/' |sed 's/image://' |sed 's/\"//g' |grep -v "'" |sort |uniq  >~/closed-env-container-images.txt
+cat imagelist.txt |sed 's/^.*\(image.*\).*$/\1/' |sed 's/image://' |sed 's/\"//g' |grep -v "'" |sed 's/^ *//;s/ *$//;s/  */ /;' |sort |uniq  >~/closed-env-container-images.txt
 rm imagelist.txt
 
 
@@ -489,11 +435,11 @@ function FIXINDEXFILES {
 
 sed -i "s/kubernetes-charts.storage.googleapis.com/$chartstoreurl\/stable/g"  $indexfilestable
 sed -i "s/kubernetes-charts-incubator.storage.googleapis.com/$chartstoreurl\/incubator/g"  $indexfileincubator
-sed -i "s/charts.rook.io/$chartstoreurl/g" $indexfilerookceph
+sed -i "s/charts.rook.io/$chartstoreurl\/rookceph/g" $indexfilerookceph
 sed -i "s/charts.bitnami.com/$chartstoreurl/g" $indexfilebitnami
-sed -i "s/bitnami.com/$chartstoreurl\/g" $indexfilebitnami
-sed -i "s/rancher-/\https:\/\/$chartstoreurl\/rancher-/g" $indexfilerancherstable
-sed -i "s/rancher-/\https:\/\/$chartstoreurl\/rancher-/g" $indexfilerancherlatest
+sed -i "s/bitnami.com/$chartstoreurl/g" $indexfilebitnami
+sed -i "s/rancher-/\https:\/\/$chartstoreurl\/rancherstable\//g" $indexfilerancherstable
+sed -i "s/rancher-/\https:\/\/$chartstoreurl\/rancherlatest\//g" $indexfilerancherlatest
 sed -i "s/vmware-tanzu.github.io\/helm-charts/$chartstoreurl\/vmware/g" $indexfilevmware
 sed -i "s/github.com\/vmware-tanzu\/helm-charts\/releases\/download\/.*\//$chartstoreurl\/vmware\//g" $indexfilevmware
 }
@@ -515,8 +461,9 @@ echo
 echo
 echo
 echo Your charts and pics are now in ~/helm-charts.tar and ready to be moved to offline env
-echo The list of associated Docker images can be found in ~/closed-env-container-images.txt
-echo Reccomend you cat ~/closed-env-container-images.txt to list the image list on the screen for easy copy paste
+echo The list of associated Docker images can be found in ~/closedcontainerfiles/closed-env-container-images.txt
+echo Reccomend you run "cat ~/closedcontainerfiles/closed-env-container-images.txt"  to list the image list on the screen for easy copy paste
+echo The list of new associated Docker images can be found in s3://rancher-container-list/uniqnew-closed-env-container-images.txt
 echo
 
 
@@ -527,4 +474,52 @@ cd $pathtocharts
 rm stable.charts.txt incubator.charts.txt imagelist_incubator.txt  imagelist_stable.txt fetch-bitnami.txt imagelist_bitnami.txt fetch-vmware.txt imagelist_vmware.txt imagelist_rookceph.txt imagelist_rancherlatest.txt imagelist_rancherstable.txt fetch-rancherlatest.txt fetch-rancherstable.txt fetch-rookceph.txt
 }
 
+#copy closed-env-container-images.txt to an s3 bucket and rotate old files
+function S3BUCKET {
+aws s3 cp s3://rancher-container-list/closed-env-container-images.txt3 s3://rancher-container-list/closed-env-container-images.txt4
+aws s3 cp s3://rancher-container-list/closed-env-container-images.txt2 s3://rancher-container-list/closed-env-container-images.txt3
+aws s3 cp s3://rancher-container-list/closed-env-container-images.txt1 s3://rancher-container-list/closed-env-container-images.txt2
+aws s3 cp s3://rancher-container-list/closed-env-container-images.txt s3://rancher-container-list/closed-env-container-images.txt1
+aws s3 cp ~/closed-env-container-images.txt  s3://rancher-container-list/
+
+aws s3 cp s3://rancher-container-list/ /tmp/ --recursive
+
+grep -Fxvf /tmp/closed-env-container-images.txt4 /tmp/closed-env-container-images.txt >new-closed-env-container-images.txt
+grep -Fxvf /tmp/closed-env-container-images.txt3/tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
+grep -Fxvf /tmp/closed-env-container-images.txt2 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
+grep -Fxvf /tmp/closed-env-container-images.txt1 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
+
+cat new-closed-env-container-images.txt |sort |uniq  >uniqnew-closed-env-container-images.txt
+
+rm /tmp/closed-env-container-images.txt
+rm /tmp/closed-env-container-images.txt1
+rm /tmp/closed-env-container-images.txt2
+rm /tmp/closed-env-container-images.txt3
+rm /tmp/closed-env-container-images.txt4
+
+aws s3 cp uniqnew-closed-env-container-images.txt s3://rancher-container-list/
+rm uniqnew-closed-env-container-images.txt
+rm new-closed-env-container-images.txt
+}
+
+
+#copy closed-env-container-images.txt to an s3 bucket and rotate old files
+function LOCALLIST {
+mkdir ~/closedcontainerfiles
+mv ~/closedcontainerfiles/closed-env-container-images.txt3 ~/closedcontainerfiles/closed-env-container-images.txt4
+mv ~/closedcontainerfiles/closed-env-container-images.txt2 ~/closedcontainerfiles/closed-env-container-images.txt3
+mv ~/closedcontainerfiles/closed-env-container-images.txt1 ~/closedcontainerfiles/closed-env-container-images.txt2
+mv ~/closedcontainerfiles/closed-env-container-images.txt ~/closedcontainerfiles/closed-env-container-images.txt1
+mv ~/closed-env-container-images.txt ~/closedcontainerfiles/closed-env-container-images.txt
+
+grep -Fxvf ~/closedcontainerfiles/closed-env-container-images.txt4 ~/closedcontainerfiles/closed-env-container-images.txt >new-closed-env-container-images.txt
+grep -Fxvf ~/closedcontainerfiles/closed-env-container-images.txt3 ~/closedcontainerfiles/closed-env-container-images.txt >>new-closed-env-container-images.txt
+grep -Fxvf ~/closedcontainerfiles/closed-env-container-images.txt2 ~/closedcontainerfiles/closed-env-container-images.txt >>new-closed-env-container-images.txt
+grep -Fxvf ~/closedcontainerfiles/closed-env-container-images.txt1 ~/closedcontainerfiles/closed-env-container-images.txt >>new-closed-env-container-images.txt
+
+cat new-closed-env-container-images.txt |sort |uniq  >uniqnew-closed-env-container-images.txt
+
+mv uniqnew-closed-env-container-images.txt ~/closedcontainerfiles/uniqnew-closed-env-container-images.txt
+rm new-closed-env-container-images.txt
+}
 
