@@ -1,4 +1,4 @@
-<img src="helmANDk8s.png" align="left" width="700px" height="250px"/>
+<img src="helmANDk8s.png" align="left" width="600px" height="200px"/>
 <img align="left" width="0" height="192px" hspace="10"/>
 
 > A shell based project for grabbing helm artifacts and packaging them up into a single artifact to be ported to your offline on prem location. This will also generate the full list of containers needed to run every single helm package in your on prem.
