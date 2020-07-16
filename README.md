@@ -37,3 +37,23 @@ First get your helm Charts and List of Associated Docker Containers and the Pict
 ```
 ./all_gather_plus_pics.sh
 ```
+
+### Merging results into Minio
+Once all_gather_plus_pics.sh script has completed, this script will push the results to a minio bucket.
+
+Prereqs:
+MC (Minio client)
+
+and
+
+Config where the Minio bucket is located with credentials:
+```
+mc config host add <ALIAS> <YOUR-S3-ENDPOINT> <YOUR-ACCESS-KEY> <YOUR-SECRET-KEY> --api S3v4
+```
+
+Then run:
+```
+./minio_helm_addon.sh
+```
+
+
