@@ -1,8 +1,6 @@
-#################################
-###  Minio Helm Addon Script  ###
-#################################
+### Minio Helm Addon Script ###
 
-## This script is to run following completion of the all_gather_plus_pics.sh from the offline helm project in Github.
+## This script is to run following completion of the all_gather_plus_pics.sh from the offline helm project in Github
 ## It takes the list created of helm charts and containers associated and updates them with the Serverless Minio bucket
 
 # create date variable
@@ -17,10 +15,10 @@ mv ~/closed-env-container-images.txt ~/old-list
 # append new list created to old list
 cat ~/closedcontainerfiles/closed-env-container-images.txt >> ~/old-list
 
-# sort list and rename old back to original name
+# sort list and rename old back to original
 cat ~/old-list | sort | uniq > ~/closed-env-container-images.txt
 
-# move and rename old list in minio to old_container_lists bucket
+# rename and move old list in mino to old_container_lists bucket
 mc mv minio/helmcharts/closed-env-container-images.txt minio/helmcharts/old_container_lists/closed-evn-container-images-$d
 
 # move new unique list back to minio
@@ -30,15 +28,15 @@ mc cp ~/closed-env-container-images.txt minio/helmcharts
 mc mv minio/helmcharts/helm-charts.tar minio/helmcharts/old_charts/helm-charts-$d.tar
 
 # move new helm-charts.tar
-mc cp ~/helm-charts.tar minio/helmcharts/
+mc cp ~/helm-charts.tar minio/helmcharts
 
-# remove any charts older than 5 days
-mc rm --recursive --force --older-than 5d minio/helmcharts/old_charts/
+# remove any charts older than 7 days
+mc rm --recursive --force --older-than 7d minio/helmcharts/old_charts/
 
-# remove any lists older than 30 days
+# remove any container lists older than 30 days
 mc rm --recursive --force --older-than 30d minio/helmcharts/old_container_lists/
 
 # cleanup
-rm -rf ~/helm-charts.tar ~/closed-env-container-images.txt ~/closedcontainerfiles/ ~/old-list
+rm -rf ~/helm-charts.tar ~/closed-env-container-images.txt ~/closedcontainerfiles ~/old-list
 
 echo happy dance
