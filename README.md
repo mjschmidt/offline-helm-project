@@ -16,6 +16,17 @@ This is and always will be a Free and Open Source Project
 * helm
 * gsutil
 * awscli
+* mc (Minio client)
+
+### How to install Minio client
+```
+wget https://dl.minio.io/client/mc/release/linux-amd64/mc
+chmod +x mc
+./mc help
+```
+
+### Config where Minio bucket is located
+mc config host add <ALIAS> <YOUR-S3-ENDPOINT> <YOUR-ACCESS-KEY> <YOUR-SECRET-KEY> --api S3v4
 
 ### How to install helm 3 on your machine
 ```
@@ -37,23 +48,4 @@ First get your helm Charts and List of Associated Docker Containers and the Pict
 ```
 ./all_gather_plus_pics.sh
 ```
-
-### Merging results into Minio
-Once all_gather_plus_pics.sh script has completed, this script will push the results to a minio bucket.
-
-Prereqs:
-MC (Minio client)
-
-and
-
-Config where the Minio bucket is located with credentials:
-```
-mc config host add <ALIAS> <YOUR-S3-ENDPOINT> <YOUR-ACCESS-KEY> <YOUR-SECRET-KEY> --api S3v4
-```
-
-Then run:
-```
-./minio_helm_addon.sh
-```
-
 
