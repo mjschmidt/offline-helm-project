@@ -6,12 +6,9 @@
 start=`date +%s`
 
 #import functions
-source gatherallfunctions
-
-
+source trimmed_gatherallfunctions
 
 #This sections calls each function
-
 SETVERS
 HELMUPDATE
 GETKUBECHARTS
@@ -27,13 +24,10 @@ GETBITNAMICHARTDEPS
 GETVMWARECHARTS
 GETVMWARECHARTDEPS
 CLEANUP
-#the fixindexfiles function must be run before the chartpics function
-FIXINDEXFILES
+FIXINDEXFILES #the fixindexfiles function must be run before the chartpics function
 GETCHARTPICS
-#S3BUCKET
-LOCALLIST
 CREATETAR
-
+TOTHEBUCKETS
 #end functions
 
 end=`date +%s`
@@ -43,4 +37,5 @@ runtime_in_minutes=$(( $runtime / 60 ))
 echo
 echo
 echo 'your run time was ' $runtime_in_minutes ' minutes!'
+echo
 

@@ -22,11 +22,7 @@ This is and always will be a Free and Open Source Project
 ```
 wget https://dl.minio.io/client/mc/release/linux-amd64/mc
 chmod +x mc
-./mc help
 ```
-
-### Config where Minio bucket is located
-mc config host add <ALIAS> <YOUR-S3-ENDPOINT> <YOUR-ACCESS-KEY> <YOUR-SECRET-KEY> --api S3v4
 
 ### How to install helm 3 on your machine
 ```

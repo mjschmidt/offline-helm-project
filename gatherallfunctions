@@ -485,7 +485,7 @@ aws s3 cp ~/closed-env-container-images.txt  s3://rancher-container-list/
 aws s3 cp s3://rancher-container-list/ /tmp/ --recursive
 
 grep -Fxvf /tmp/closed-env-container-images.txt4 /tmp/closed-env-container-images.txt >new-closed-env-container-images.txt
-grep -Fxvf /tmp/closed-env-container-images.txt3/tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
+grep -Fxvf /tmp/closed-env-container-images.txt3 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
 grep -Fxvf /tmp/closed-env-container-images.txt2 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
 grep -Fxvf /tmp/closed-env-container-images.txt1 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
 
