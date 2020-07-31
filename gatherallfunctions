@@ -470,8 +470,13 @@ if mc ls minio/helmcharts; then
 	# cleanup
 	rm -rf ~/helm-charts.tar ~/closed-env-container-images.txt ~/temp-old.txt ~/yester-list
 
+<<<<<<< HEAD
 	# show updated minio bucket
 	mc ls minio/helmcharts
+=======
+        # show updated minio bucket
+        mc ls minio/helmcharts
+>>>>>>> minio-helm-addon
 
 	echo happy dance
 
