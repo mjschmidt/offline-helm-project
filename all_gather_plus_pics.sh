@@ -6,7 +6,7 @@
 start=`date +%s`
 
 #import functions
-source trimmed_gatherallfunctions
+source gatherallfunctions
 
 #This sections calls each function
 SETVERS

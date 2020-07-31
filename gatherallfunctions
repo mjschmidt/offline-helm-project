@@ -5,7 +5,6 @@
 #Start your engines
 #start=`date +%s`
 
-
 function SETVERS {
 #set global variables
 imagestoreurl=https://test.com
@@ -50,8 +49,6 @@ rm -rf $rancherlatestcharts'-old'
 mv $rancherlatestcharts $rancherlatestcharts'-old'
 mkdir $rancherlatestcharts
 
-
-
 #set vmware helm chart variables & since vmware takes so long, in the future we'll only want to get the delta's so we want to keep track of the old list as well as the new list. For now, we don't do that, but setup for follow on work.
 indexfilevmware=/tmp/vmware-charts/index.yaml
 vmwarecharts=$pathtocharts'/vmware-charts'
@@ -72,17 +69,6 @@ helm repo update
 
 }
 
-#I think this stuff is old and can be deleted
-#rm stable.charts.txt
-#ls $stablecharts > stable.charts.txt
-
-
-#add invubator charts list
-#rm incubator.charts.txt
-#ls  $incubatorcharts  > incubator.charts.txt
-#End area of "I think this stuff is old and can be deleted
-
-
 #This tool is much faster than helm for gathering all the stable and incubator helm charts. Helm pull takes forever. Its worth it and is easy to configure (see readme)
 
 function GETKUBECHARTS {
@@ -95,38 +81,30 @@ ls -d kubernetes-charts-incubator/* > all.incubator.charts.txt
 function GETKUBECHARTDEPS {
 #Loop through stable and template out all charts to be able to easily grab image and tags
 
-
 cat all.stable.charts.txt |xargs -P 10 -n 1 helm template | grep image: >>imagelist.txt
-
 rm all.stable.charts.txt
 
 #Loop through incubator and template out all charts to be able to easily grab image and tags
 
 cat all.incubator.charts.txt |xargs -P 10 -n 1 helm template | grep image: >>imagelist.txt
-
 rm all.incubator.charts.txt
 
 }
+#end fetch kubecharts charts
 
 function GETROOKCHARTS {
-#rook-ceph
 cd $rookcephcharts
 helm repo add rook-release https://charts.rook.io/release
 helm repo update
+
 #This command finds every version of every helm chart and puts it into a file where we can actually do something with it
 helm search repo rook-release --versions | cut -c -47 | grep -v NAME | awk '{$1=$1};1' | sed 's/ / --version /g' > fetch-rookceph.txt
 
-
 #This commnd pulls all of the Rook charts contained within the index file
-
-
 curl -L  https://charts.rook.io/release/index.yaml | grep -v icon: | grep -v home | grep tgz | cut -c 7- |xargs -P 10 -n 1 wget
-
 
 #curl down the rookcephindex file
 curl -o index.yaml -L https://charts.rook.io/release/index.yaml
-
-#Loop through stable and template out all charts to be able to easily grab image and tags
 
 #get the list of all the charts for the same type of for loop as we do with stable and incubator
 mv fetch-rookceph.txt ../
@@ -140,7 +118,6 @@ function GETROOKCHARTDEPS {
 #Loop through rookceph and template out all charts to be able to easily grab image and tags
 
 cat rookceph.txt |xargs -P 10 -n 1 helm template | grep image: >>imagelist.txt
-
 rm rookceph.charts.txt
 
 }
@@ -153,20 +130,15 @@ function GETRANCHERSTABLECHARTS {
 cd $rancherstablecharts
 helm repo add rancher-stable https://releases.rancher.com/server-charts/stable
 helm repo update
+
 #This command finds every version of every helm chart and puts it into a file where we can actually do something with it
 helm search repo rancher-stable  --versions | cut -c -47 | grep -v NAME | awk '{$1=$1};1' | sed 's/ / --version /g' > fetch-rancherstable.txt
 
-
 #This commnd pulls all of the Rancher Stable charts contained within the index file
-
-
 curl -L  https://releases.rancher.com/server-charts/stable/index.yaml | grep -v icon: | grep -v home | grep tgz | cut -c 7- | sed 's/^/https:\/\/releases.rancher.com\/server-charts\/stable\//'  |xargs -P 10 -n 1 wget
-
 
 #curl down the rookcephindex file
 curl -o index.yaml -L https://releases.rancher.com/server-charts/stable/index.yaml 
-
-#Loop through stable and template out all charts to be able to easily grab image and tags
 
 #get the list of all the charts for the same type of for loop as we do with stable and incubator
 mv fetch-rancherstable.txt ../
@@ -179,33 +151,27 @@ function GETRANCHERSTABLECHARTDEPS {
 #Loop through rookceph and template out all charts to be able to easily grab image and tags
 
 cat rancherstable.charts.txt |xargs -P 10 -n 1 helm template | grep image: >>imagelist.txt
-
 rm rancherstable.charts.txt
 
 }
 #end fetch rancherstable charts
 
 
-
-#Rancher  latest
+#Rancher Latest
 
 function GETRANCHERLATESTCHARTS {
 cd $rancherlatestcharts
 helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
 helm repo update
+
 #This command finds every version of every helm chart and puts it into a file where we can actually do something with it
 helm search repo rancher-latest  --versions | cut -c -47 | grep -v NAME | awk '{$1=$1};1' | sed 's/ / --version /g' > fetch-rancherlatest.txt
 
-
 #This commnd pulls all of the Rancher latest charts contained within the index file
-
 curl -L  https://releases.rancher.com/server-charts/latest/index.yaml | grep -v icon: | grep -v home | grep tgz | cut -c 7- | sed 's/^/https:\/\/releases.rancher.com\/server-charts\/latest\//'  |xargs -P 10 -n 1 wget
-
 
 #curl down the rancherlatestindex file
 curl -o index.yaml -L https://releases.rancher.com/server-charts/latest/index.yaml
-
-#Loop through stable and template out all charts to be able to easily grab image and tags
 
 #get the list of all the charts for the same type of for loop as we do with stable and incubator
 mv fetch-rancherlatest.txt ../
@@ -219,8 +185,6 @@ function GETRANCHERLATESTCHARTDEPS {
 #Loop through rancher-latest and template out all charts to be able to easily grab image and tags
 
 cat rancherlatest.charts.txt |xargs -P 10 -n 1 helm template | grep image: >>imagelist.txt
-
-
 rm rancherlatest.charts.txt
 
 }
@@ -241,13 +205,10 @@ helm search repo bitnami --versions | cut -c -47 | grep -v NAME | awk '{$1=$1};1
 
 
 #This loop goes through and pulls all the helm charts. It should be made faster in the future with some sort of distributed pull tool. 
-
 curl -L https://charts.bitnami.com/bitnami/index.yaml | grep -v icon: | grep -v home | grep tgz | cut -c 7- |xargs -P 10 -n 1 wget
 
 #curl down the bitnami index file
 curl -o index.yaml -L https://charts.bitnami.com/bitnami/index.yaml
-
-#Loop through stable and template out all charts to be able to easily grab image and tags
 
 #get the list of all the charts for the same type of for loop as we do with stable and incubator
 mv fetch-bitnami.txt ../
@@ -257,11 +218,9 @@ ls -d $bitnamicharts/* > bitnami.charts.txt
 }
 
 function GETBITNAMICHARTDEPS {
-
 #Loop through bitnami and template out all charts to be able to easily grab image and tags
 
 cat bitnami.charts.txt |xargs -P 10 -n 1 helm template | grep image: >>imagelist.txt
-
 rm bitnami.charts.txt
 
 }
@@ -276,18 +235,12 @@ helm repo update
 #This command finds every version of every helm chart and puts it into a file where we can actually do something with it
 helm search repo vmware/ --versions | cut -c -25 | grep -v NAME | awk '{$1=$1};1' | sed 's/ / --version /g' > fetch-vmware.txt
 
-
 #This commnd pulls all of the VMWare  charts contained within the index file
-
 curl -L https://vmware-tanzu.github.io/helm-charts/index.yaml | grep -v icon: | grep -v home | grep tgz | cut -c 7- |xargs -P 10 -n 1 wget
-
-
 
 #curl down the vmware index file
 curl -o index.yaml -L https://vmware-tanzu.github.io/helm-charts/index.yaml
 sed -i "s/\*//g" index.yaml
-
-#Loop through stable and template out all charts to be able to easily grab image and tags
 
 #get the list of all the charts for the same type of for loop as we do with stable and incubator
 mv fetch-vmware.txt ../
@@ -338,7 +291,7 @@ mv rancherstable-charts /tmp/
 }
 #end moving fetched helm charts to /tmp/
 
-#get the pics usint a serioes of for loops
+#get the pics using a series of for loops
 
 function GETCHARTPICS {
 cat /tmp/rancherlatest-charts/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_rancherlatest.txt; rm output.txt iconlist
@@ -363,7 +316,6 @@ echo go get image "### $(echo $f| sed 's|.*/||') ###";
 curl -o /tmp/chartpics/$(echo $f | sed 's/https\:\/\///g' | sed 's/\//-/g') $f &
 done
 
-
 #grab rancher-latest pictures and icons
 for f in `cat imagelist_rancherlatest.txt`;
 do
@@ -383,8 +335,6 @@ sed -i "/icon: $j/c\    icon: $imagestoreurl/$bucket/$d" $indexfilerancherstable
 echo go get image "### $(echo $f| sed 's|.*/||') ###";
 curl -o /tmp/chartpics/$(echo $f | sed 's/https\:\/\///g' | sed 's/\//-/g') $f &
 done
-
-
 
 #grab rookceph pictures and icons
 for f in `cat imagelist_rookceph.txt`;
@@ -459,13 +409,6 @@ rm -rf kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts vm
 
 echo
 echo
-echo
-echo Your charts and pics are now in ~/helm-charts.tar and ready to be moved to offline env
-echo The list of associated Docker images can be found in ~/closedcontainerfiles/closed-env-container-images.txt
-echo Reccomend you run "cat ~/closedcontainerfiles/closed-env-container-images.txt"  to list the image list on the screen for easy copy paste
-echo The list of new associated Docker images can be found in s3://rancher-container-list/uniqnew-closed-env-container-images.txt
-echo
-
 
 cd $pathtocharts
 cd ../
@@ -474,52 +417,92 @@ cd $pathtocharts
 rm stable.charts.txt incubator.charts.txt imagelist_incubator.txt  imagelist_stable.txt fetch-bitnami.txt imagelist_bitnami.txt fetch-vmware.txt imagelist_vmware.txt imagelist_rookceph.txt imagelist_rancherlatest.txt imagelist_rancherstable.txt fetch-rancherlatest.txt fetch-rancherstable.txt fetch-rookceph.txt
 }
 
-#copy closed-env-container-images.txt to an s3 bucket and rotate old files
-function S3BUCKET {
-aws s3 cp s3://rancher-container-list/closed-env-container-images.txt3 s3://rancher-container-list/closed-env-container-images.txt4
-aws s3 cp s3://rancher-container-list/closed-env-container-images.txt2 s3://rancher-container-list/closed-env-container-images.txt3
-aws s3 cp s3://rancher-container-list/closed-env-container-images.txt1 s3://rancher-container-list/closed-env-container-images.txt2
-aws s3 cp s3://rancher-container-list/closed-env-container-images.txt s3://rancher-container-list/closed-env-container-images.txt1
-aws s3 cp ~/closed-env-container-images.txt  s3://rancher-container-list/
+# transfer new container list after copying and finding the new unique images from last run
+function TOTHEBUCKETS {
 
-aws s3 cp s3://rancher-container-list/ /tmp/ --recursive
+if mc ls minio/helmcharts; then	
 
-grep -Fxvf /tmp/closed-env-container-images.txt4 /tmp/closed-env-container-images.txt >new-closed-env-container-images.txt
-grep -Fxvf /tmp/closed-env-container-images.txt3 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
-grep -Fxvf /tmp/closed-env-container-images.txt2 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
-grep -Fxvf /tmp/closed-env-container-images.txt1 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
+	# create date variable
+	d=`date +%Y-%m-%d-%H-%M`
 
-cat new-closed-env-container-images.txt |sort |uniq  >uniqnew-closed-env-container-images.txt
+	# move new container list to tmp folder
+	mv ~/closed-env-container-images.txt /tmp/full-list
 
-rm /tmp/closed-env-container-images.txt
-rm /tmp/closed-env-container-images.txt1
-rm /tmp/closed-env-container-images.txt2
-rm /tmp/closed-env-container-images.txt3
-rm /tmp/closed-env-container-images.txt4
+	# copy yesterdays image list from minio
+	mc cp minio/helmcharts/closed-env-container-images.txt ~/
 
-aws s3 cp uniqnew-closed-env-container-images.txt s3://rancher-container-list/
-rm uniqnew-closed-env-container-images.txt
-rm new-closed-env-container-images.txt
+	# rename yesterdays image list
+	mv ~/closed-env-container-images.txt ~/yester-list
+
+	# append todays list to yesterdays list
+	cat /tmp/full-list >> ~/yester-list
+
+	# copy old list from minio temp
+	mc mv minio/helmcharts/temp/temp-old.txt ~/
+
+	# append old list to yesterdays list
+	cat ~/temp-old.txt >> ~/yester-list
+
+	# move new full list to mino temp folder
+	mc mv /tmp/full-list minio/helmcharts/temp/temp-old.txt
+
+	# sort out new unique list and rename back to original
+	cat ~/yester-list | sort | uniq -u > ~/closed-env-container-images.txt
+
+	# rename and move yesterdays list in minio to old_container_lists bucket
+	mc mv minio/helmcharts/closed-env-container-images.txt minio/helmcharts/old_container_lists/closed-evn-container-images-$d
+
+	# move new unique list back to minio
+	mc cp ~/closed-env-container-images.txt minio/helmcharts
+
+	# move old helm-charts.tar to old_charts bucket
+	mc mv minio/helmcharts/helm-charts.tar minio/helmcharts/old_charts/helm-charts-$d.tar
+	
+	# move new helm-charts.tar
+	mc cp ~/helm-charts.tar minio/helmcharts
+
+	# remove any charts older than 7 days
+	mc rm --recursive --force --older-than 7d minio/helmcharts/old_charts/
+
+	# remove any container lists older than 30 days
+	mc rm --recursive --force --older-than 30d minio/helmcharts/old_container_lists/
+
+	# cleanup
+	rm -rf ~/helm-charts.tar ~/closed-env-container-images.txt ~/temp-old.txt ~/yester-list
+
+	echo happy dance
+
+elif aws s3api head-bucket --bucket my-bucket; then
+
+	aws s3 cp s3://rancher-container-list/closed-env-container-images.txt3 s3://rancher-container-list/closed-env-container-images.txt4
+	aws s3 cp s3://rancher-container-list/closed-env-container-images.txt2 s3://rancher-container-list/closed-env-container-images.txt3
+	aws s3 cp s3://rancher-container-list/closed-env-container-images.txt1 s3://rancher-container-list/closed-env-container-images.txt2
+	aws s3 cp s3://rancher-container-list/closed-env-container-images.txt s3://rancher-container-list/closed-env-container-images.txt1
+	aws s3 cp ~/closed-env-container-images.txt  s3://rancher-container-list/
+
+	aws s3 cp s3://rancher-container-list/ /tmp/ --recursive
+
+	grep -Fxvf /tmp/closed-env-container-images.txt4 /tmp/closed-env-container-images.txt >new-closed-env-container-images.txt
+	grep -Fxvf /tmp/closed-env-container-images.txt3 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
+	grep -Fxvf /tmp/closed-env-container-images.txt2 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
+	grep -Fxvf /tmp/closed-env-container-images.txt1 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
+
+	cat new-closed-env-container-images.txt |sort |uniq  >uniqnew-closed-env-container-images.txt
+
+	rm /tmp/closed-env-container-images.txt
+	rm /tmp/closed-env-container-images.txt1
+	rm /tmp/closed-env-container-images.txt2
+	rm /tmp/closed-env-container-images.txt3
+	rm /tmp/closed-env-container-images.txt4
+
+	aws s3 cp uniqnew-closed-env-container-images.txt s3://rancher-container-list/
+	rm uniqnew-closed-env-container-images.txt
+	rm new-closed-env-container-images.txt
+
+	echo happy dance
+
+else
+	echo "Couldn't find bucket to transfer to. Aborting..." 1>&2
+	exit 1
+fi
 }
-
-
-#copy closed-env-container-images.txt to an s3 bucket and rotate old files
-function LOCALLIST {
-mkdir ~/closedcontainerfiles
-mv ~/closedcontainerfiles/closed-env-container-images.txt3 ~/closedcontainerfiles/closed-env-container-images.txt4
-mv ~/closedcontainerfiles/closed-env-container-images.txt2 ~/closedcontainerfiles/closed-env-container-images.txt3
-mv ~/closedcontainerfiles/closed-env-container-images.txt1 ~/closedcontainerfiles/closed-env-container-images.txt2
-mv ~/closedcontainerfiles/closed-env-container-images.txt ~/closedcontainerfiles/closed-env-container-images.txt1
-mv ~/closed-env-container-images.txt ~/closedcontainerfiles/closed-env-container-images.txt
-
-grep -Fxvf ~/closedcontainerfiles/closed-env-container-images.txt4 ~/closedcontainerfiles/closed-env-container-images.txt >new-closed-env-container-images.txt
-grep -Fxvf ~/closedcontainerfiles/closed-env-container-images.txt3 ~/closedcontainerfiles/closed-env-container-images.txt >>new-closed-env-container-images.txt
-grep -Fxvf ~/closedcontainerfiles/closed-env-container-images.txt2 ~/closedcontainerfiles/closed-env-container-images.txt >>new-closed-env-container-images.txt
-grep -Fxvf ~/closedcontainerfiles/closed-env-container-images.txt1 ~/closedcontainerfiles/closed-env-container-images.txt >>new-closed-env-container-images.txt
-
-cat new-closed-env-container-images.txt |sort |uniq  >uniqnew-closed-env-container-images.txt
-
-mv uniqnew-closed-env-container-images.txt ~/closedcontainerfiles/uniqnew-closed-env-container-images.txt
-rm new-closed-env-container-images.txt
-}
-
