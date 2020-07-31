@@ -420,92 +420,89 @@ rm stable.charts.txt incubator.charts.txt imagelist_incubator.txt  imagelist_sta
 # transfer new container list after copying and finding the new unique images from last run
 function TOTHEBUCKETS {
 
-if mc ls minio/helmcharts; then	
+# create date variable
+d=`date +%Y-%m-%d-%H-%M`
 
-	# create date variable
-	d=`date +%Y-%m-%d-%H-%M`
+# move new container list to tmp folder
+mv ~/closed-env-container-images.txt /tmp/full-list
 
-	# move new container list to tmp folder
-	mv ~/closed-env-container-images.txt /tmp/full-list
+# copy yesterdays image list from minio and s3 bucket
+mc cp minio/helmcharts/minio-closed-env-container-images.txt ~/yester-minio-list
+aws s3 cp s3://rancher-container-list/s3-closed-env-container-images.txt ~/yester-s3-list
 
-	# copy yesterdays image list from minio
-	mc cp minio/helmcharts/closed-env-container-images.txt ~/
+# append todays list to yesterdays list
+cat /tmp/full-list >> ~/yester-minio-list
+cat /tmp/full-list >> ~/yester-s3-list
 
-	# rename yesterdays image list
-	mv ~/closed-env-container-images.txt ~/yester-list
+# copy old list from minio temp and s3 temp bucket
+mc mv minio/helmcharts/temp/temp-minio-old.txt ~/
+aws s3 mv s3://rancher-container-list/temp/temp-s3-old.txt ~/
 
-	# append todays list to yesterdays list
-	cat /tmp/full-list >> ~/yester-list
+# append old list to yesterdays list
+cat ~/temp-minio-old.txt >> ~/yester-minio-list
+cat ~/temp-s3-old.txt >> ~/yester-s3-list
 
-	# copy old list from minio temp
-	mc mv minio/helmcharts/temp/temp-old.txt ~/
+# copy then move new full list to minio temp and s3 temp bucket
+mc cp /tmp/full-list minio/helmcharts/temp/temp-minio-old.txt
+aws s3 mv /tmp/full-list s3://rancher-container-list/temp/temp-s3-old.txt
 
-	# append old list to yesterdays list
-	cat ~/temp-old.txt >> ~/yester-list
+# sort out new unique list and rename back to original
+cat ~/yester-minio-list | sort | uniq -u > ~/minio-closed-env-container-images.txt
+cat ~/yester-s3-list | sort | uniq -u > ~/s3-closed-env-container-images.txt
 
-	# move new full list to mino temp folder
-	mc mv /tmp/full-list minio/helmcharts/temp/temp-old.txt
+# rename and move yesterdays list in minio and s3 to old_container_lists bucket
+mc mv minio/helmcharts/minio-closed-env-container-images.txt minio/helmcharts/old_container_lists/minio-closed-env-container-images-$d
+mc mv s3://rancher-conatiner-list/s3-closed-env-container-images.txt s3://rancher-container-list/old_container_lists/s3-closed-env-container-images-$d
 
-	# sort out new unique list and rename back to original
-	cat ~/yester-list | sort | uniq -u > ~/closed-env-container-images.txt
+# move new unique list back to minio and s3 bucket
+mc cp ~/minio-closed-env-container-images.txt minio/helmcharts
+aws s3 cp ~/s3-closed-env-container-images.txt s3://rancher-container-list
 
-	# rename and move yesterdays list in minio to old_container_lists bucket
-	mc mv minio/helmcharts/closed-env-container-images.txt minio/helmcharts/old_container_lists/closed-evn-container-images-$d
-
-	# move new unique list back to minio
-	mc cp ~/closed-env-container-images.txt minio/helmcharts
-
-	# move old helm-charts.tar to old_charts bucket
-	mc mv minio/helmcharts/helm-charts.tar minio/helmcharts/old_charts/helm-charts-$d.tar
+# move old helm-charts.tar to minio and s3 old_charts bucket
+mc mv minio/helmcharts/helm-charts.tar minio/helmcharts/old_charts/helm-charts-$d.tar
+aes s3 mv s3://rancher-container-list/helm-charts.tar s3://rancher-container-list/old_charts/helm-charts-$d.tar
 	
-	# move new helm-charts.tar
-	mc cp ~/helm-charts.tar minio/helmcharts
+# move new helm-charts.tar
+mc cp ~/helm-charts.tar minio/helmcharts
+aws s3 cp ~/helm-charts/tar s3://rancher-container-list
 
-	# remove any charts older than 7 days
-	mc rm --recursive --force --older-than 7d minio/helmcharts/old_charts/
+# remove any charts older than 7 days
+mc rm --recursive --force --older-than 7d minio/helmcharts/old_charts/
 
-	# remove any container lists older than 30 days
-	mc rm --recursive --force --older-than 30d minio/helmcharts/old_container_lists/
+# remove any container lists older than 30 days
+mc rm --recursive --force --older-than 30d minio/helmcharts/old_container_lists/
 
-	# cleanup
-	rm -rf ~/helm-charts.tar ~/closed-env-container-images.txt ~/temp-old.txt ~/yester-list
+# cleanup
+rm -rf ~/helm-charts.tar ~/closed-env-container-images.txt ~/temp-old.txt ~/yester-list
 
-        # show updated minio bucket
-        mc ls minio/helmcharts
+# show updated buckets
+mc ls minio/helmcharts
 
-	echo happy dance
+#aws s3 cp s3://rancher-container-list/closed-env-container-images.txt3 s3://rancher-container-list/closed-env-container-images.txt4
+#aws s3 cp s3://rancher-container-list/closed-env-container-images.txt2 s3://rancher-container-list/closed-env-container-images.txt3
+#aws s3 cp s3://rancher-container-list/closed-env-container-images.txt1 s3://rancher-container-list/closed-env-container-images.txt2
+#aws s3 cp s3://rancher-container-list/closed-env-container-images.txt s3://rancher-container-list/closed-env-container-images.txt1
+#aws s3 cp ~/closed-env-container-images.txt  s3://rancher-container-list/
 
-elif aws s3api head-bucket --bucket my-bucket; then
+#aws s3 cp s3://rancher-container-list/ /tmp/ --recursive
 
-	aws s3 cp s3://rancher-container-list/closed-env-container-images.txt3 s3://rancher-container-list/closed-env-container-images.txt4
-	aws s3 cp s3://rancher-container-list/closed-env-container-images.txt2 s3://rancher-container-list/closed-env-container-images.txt3
-	aws s3 cp s3://rancher-container-list/closed-env-container-images.txt1 s3://rancher-container-list/closed-env-container-images.txt2
-	aws s3 cp s3://rancher-container-list/closed-env-container-images.txt s3://rancher-container-list/closed-env-container-images.txt1
-	aws s3 cp ~/closed-env-container-images.txt  s3://rancher-container-list/
+#grep -Fxvf /tmp/closed-env-container-images.txt4 /tmp/closed-env-container-images.txt >new-closed-env-container-images.txt
+#grep -Fxvf /tmp/closed-env-container-images.txt3 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
+#grep -Fxvf /tmp/closed-env-container-images.txt2 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
+#grep -Fxvf /tmp/closed-env-container-images.txt1 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
 
-	aws s3 cp s3://rancher-container-list/ /tmp/ --recursive
+#cat new-closed-env-container-images.txt |sort |uniq  >uniqnew-closed-env-container-images.txt
 
-	grep -Fxvf /tmp/closed-env-container-images.txt4 /tmp/closed-env-container-images.txt >new-closed-env-container-images.txt
-	grep -Fxvf /tmp/closed-env-container-images.txt3 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
-	grep -Fxvf /tmp/closed-env-container-images.txt2 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
-	grep -Fxvf /tmp/closed-env-container-images.txt1 /tmp/closed-env-container-images.txt >>new-closed-env-container-images.txt
+#rm /tmp/closed-env-container-images.txt
+#rm /tmp/closed-env-container-images.txt1
+#rm /tmp/closed-env-container-images.txt2
+#rm /tmp/closed-env-container-images.txt3
+#rm /tmp/closed-env-container-images.txt4
 
-	cat new-closed-env-container-images.txt |sort |uniq  >uniqnew-closed-env-container-images.txt
+#aws s3 cp uniqnew-closed-env-container-images.txt s3://rancher-container-list/
+#rm uniqnew-closed-env-container-images.txt
+#rm new-closed-env-container-images.txt
 
-	rm /tmp/closed-env-container-images.txt
-	rm /tmp/closed-env-container-images.txt1
-	rm /tmp/closed-env-container-images.txt2
-	rm /tmp/closed-env-container-images.txt3
-	rm /tmp/closed-env-container-images.txt4
+echo happy dance
 
-	aws s3 cp uniqnew-closed-env-container-images.txt s3://rancher-container-list/
-	rm uniqnew-closed-env-container-images.txt
-	rm new-closed-env-container-images.txt
-
-	echo happy dance
-
-else
-	echo "Couldn't find bucket to transfer to. Aborting..." 1>&2
-	exit 1
-fi
 }
