@@ -16,6 +16,13 @@ This is and always will be a Free and Open Source Project
 * helm
 * gsutil
 * awscli
+* mc (Minio client)
+
+### How to install Minio client
+```
+wget https://dl.minio.io/client/mc/release/linux-amd64/mc
+chmod +x mc
+```
 
 ### How to install helm 3 on your machine
 ```
@@ -37,3 +44,4 @@ First get your helm Charts and List of Associated Docker Containers and the Pict
 ```
 ./all_gather_plus_pics.sh
 ```
+
