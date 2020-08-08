@@ -446,6 +446,8 @@ cd /tmp
 
 #i think this is just a duplicate command of above now
 #sed -i "s/charts.bitnami.com/$chartstoreurl/g" bitnami-charts/index.yaml
+rm incubator/*-.tgz.1
+mv stable/*-.tgz.1
 mv incubator kubernetes-charts-incubator
 mv stable kubernetes-charts
 tar -cf ~/helm-charts.tar  kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts vmware-charts rancherstable-charts rookceph-charts rancherlatest-charts
