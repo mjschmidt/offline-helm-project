@@ -30,7 +30,6 @@ docker rm offline-helm-project
 ### Pre Reqs
 * git
 * helm
-* gsutil
 * awscli
 * mc (Minio client)
 
@@ -44,15 +43,6 @@ chmod +x mc
 ```
 #helm is not included in this git project
 sudo cp tools/helm /usr/bin/
-```
-
-### Install and login to Google Cloud to use gsutil
-```
-#install gsutil
-curl https://sdk.cloud.google.com | bash
-exec -l $SHELL
-gcloud init
-#use helmprojectoffline@gmail.com as the login account
 ```
 
 ### Script Usage
