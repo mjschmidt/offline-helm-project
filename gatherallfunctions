@@ -13,12 +13,14 @@ bucket=pics
 pathtocharts=$(pwd)
 
 #set helm chart stable variables
-indexfilestable=/tmp/kubernetes-charts/index.yaml
+indexfilestable=/tmp/stable/index.yaml
 stablecharts=$pathtocharts'/stable'
+mkdir $stablecharts
 
 #set helm chart incubator variables
-indexfileincubator=/tmp/kubernetes-charts-incubator/index.yaml
+indexfileincubator=/tmp/incubator/index.yaml
 incubatorcharts=$pathtocharts'/incubator'
+mkdir $incubatorcharts
 
 #set bitnami helm chart variables & since bitnami takes so long, in the future we'll only want to get the delta's so we want to keep track of the old list as well as the new list. For now, we don't do that, but setup for follow on work.
 indexfilebitnami=/tmp/bitnami-charts/index.yaml
@@ -71,11 +73,53 @@ helm repo update
 
 #This tool is much faster than helm for gathering all the stable and incubator helm charts. Helm pull takes forever. Its worth it and is easy to configure (see readme)
 
-function GETKUBECHARTS {
-gsutil -m cp -R gs://kubernetes-charts .
-gsutil -m cp -R gs://kubernetes-charts-incubator .
-ls -d kubernetes-charts/* > all.stable.charts.txt
-ls -d kubernetes-charts-incubator/* > all.incubator.charts.txt
+#function GETKUBECHARTS {
+#gsutil -m cp -R gs://kubernetes-charts .
+#gsutil -m cp -R gs://kubernetes-charts-incubator .
+#ls -d kubernetes-charts/* > all.stable.charts.txt
+#ls -d kubernetes-charts-incubator/* > all.incubator.charts.txt
+#}
+
+function GETKUBESTABLE {
+cd $stablecharts
+helm repo add stable https://kubernetes-charts.storage.googleapis.com
+helm repo update
+
+#This command finds every version of every helm chart and puts it into a file where we can actually do something with it
+helm search repo stable --versions | cut -c -47 | grep -v NAME | awk '{$1=$1};1' | sed 's/ / --version /g' > fetch-stable.txt
+
+#This commnd pulls all of the Rook charts contained within the index file
+curl -L  https://kubernetes-charts.storage.googleapis.com/index.yaml | grep -v icon: | grep -v home | grep tgz | cut -c 7- |xargs -P 10 -n 1 wget
+
+#curl down the rookcephindex file
+curl -o index.yaml -L https://kubernetes-charts.storage.googleapis.com/index.yaml
+
+#get the list of all the charts for the same type of for loop as we do with stable and incubator
+mv fetch-stable.txt ../
+cd ../
+echo $(pwd)
+ls -d $stablecharts/* > all.stable.charts.txt
+}
+
+function GETKUBEINCUBATOR {
+cd $incubatorcharts
+helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com
+helm repo update
+
+#This command finds every version of every helm chart and puts it into a file where we can actually do something with it
+helm search repo incubator --versions | cut -c -47 | grep -v NAME | awk '{$1=$1};1' | sed 's/ / --version /g' > fetch-incubator.txt
+
+#This commnd pulls all of the Rook charts contained within the index file
+curl -L  https://kubernetes-charts-incubator.storage.googleapis.com/index.yaml | grep -v icon: | grep -v home | grep tgz | cut -c 7- |xargs -P 10 -n 1 wget
+
+#curl down the rookcephindex file
+curl -o index.yaml -L https://kubernetes-charts-incubator.storage.googleapis.com/index.yaml
+
+#get the list of all the charts for the same type of for loop as we do with stable and incubator
+mv fetch-incubator.txt ../
+cd ../
+echo $(pwd)
+ls -d $stablecharts/* > all.stable.charts.txt
 }
 
 function GETKUBECHARTDEPS {
@@ -90,6 +134,7 @@ cat all.incubator.charts.txt |xargs -P 10 -n 1 helm template | grep image: >>ima
 rm all.incubator.charts.txt
 
 }
+
 #end fetch kubecharts charts
 
 function GETROOKCHARTS {
@@ -281,8 +326,8 @@ rm imagelist.txt
 
 #move chart files to tmp foler for processing
 
-mv kubernetes-charts /tmp/
-mv kubernetes-charts-incubator /tmp/
+mv stable /tmp/
+mv incubator /tmp/
 mv bitnami-charts /tmp/
 mv vmware-charts /tmp/
 mv rookceph-charts /tmp/
@@ -296,11 +341,11 @@ mv rancherstable-charts /tmp/
 function GETCHARTPICS {
 cat /tmp/rancherlatest-charts/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_rancherlatest.txt; rm output.txt iconlist
 cat /tmp/rancherstable-charts/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_rancherstable.txt; rm output.txt iconlist
-cat /tmp/kubernetes-charts/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_stable.txt; rm output.txt iconlist
+cat /tmp/stable/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_stable.txt; rm output.txt iconlist
 cat /tmp/rookceph-charts/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_rookceph.txt; rm output.txt iconlist
 cat /tmp/rancherlatest-charts/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_rancherlatest.txt; rm output.txt iconlist
 cat /tmp/rancherstable-charts/index.yaml | grep icon | sed 's/    icon: //g' > iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_rancherstable.txt; rm output.txt iconlist
-cat /tmp/kubernetes-charts-incubator/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_incubator.txt; rm output.txt iconlist
+cat /tmp/incubator/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_incubator.txt; rm output.txt iconlist
 cat /tmp/bitnami-charts/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//' > imagelist_bitnami.txt; rm output.txt iconlist
 cat /tmp/vmware-charts/index.yaml | grep icon | sed 's/    icon: //g' >> iconlist; uniq iconlist output.txt; cat -n output.txt | sed 's/^.......//'  > imagelist_vmware.txt; rm output.txt iconlist
 rm -rf /tmp/chartpics/
@@ -401,7 +446,10 @@ cd /tmp
 
 #i think this is just a duplicate command of above now
 #sed -i "s/charts.bitnami.com/$chartstoreurl/g" bitnami-charts/index.yaml
-
+rm incubator/*-.tgz.1
+mv stable/*-.tgz.1
+mv incubator kubernetes-charts-incubator
+mv stable kubernetes-charts
 tar -cf ~/helm-charts.tar  kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts vmware-charts rancherstable-charts rookceph-charts rancherlatest-charts
 rm -rf kubernetes-charts-incubator kubernetes-charts chartpics bitnami-charts vmware-charts rancherstable-charts rookceph-charts rancherlatest-charts
 
@@ -414,7 +462,7 @@ cd $pathtocharts
 cd ../
 rm -rf ./charts
 cd $pathtocharts
-rm stable.charts.txt incubator.charts.txt imagelist_incubator.txt  imagelist_stable.txt fetch-bitnami.txt imagelist_bitnami.txt fetch-vmware.txt imagelist_vmware.txt imagelist_rookceph.txt imagelist_rancherlatest.txt imagelist_rancherstable.txt fetch-rancherlatest.txt fetch-rancherstable.txt fetch-rookceph.txt
+rm stable.charts.txt incubator.charts.txt imagelist_incubator.txt  imagelist_stable.txt fetch-bitnami.txt imagelist_bitnami.txt fetch-vmware.txt imagelist_vmware.txt imagelist_rookceph.txt imagelist_rancherlatest.txt imagelist_rancherstable.txt fetch-rancherlatest.txt fetch-rancherstable.txt fetch-rookceph.txt fetch-stable.txt fetch-incubator.txt
 }
 
 # transfer new container list after copying and finding the new unique images from last run
@@ -480,7 +528,6 @@ mc ls minio/helmcharts
 aws s3 ls s3://rancher-container-list
 
 echo happy dance
-
 }
 
 #aws s3 cp s3://rancher-container-list/closed-env-container-images.txt3 s3://rancher-container-list/closed-env-container-images.txt4
