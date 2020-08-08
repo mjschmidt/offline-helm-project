@@ -11,6 +11,22 @@
 Perfect for pulling together all the Dependencies needed to port to an offline env
 This is and always will be a Free and Open Source Project
 
+## Running with Docker
+### Pre Reqs
+* docker
+
+### How to run
+You can run this all in an already created docker container by running the following command
+```
+docker run --name offline-helm-project -e KUBE_LATEST_VERSION="v1.18.3" -e HELM_VERSION="v3.2.4" -e MC_ALIAS="minio" -e MC_ENDPOINT="<Your_Misio_URL>" -e MC_ACCESS_KEY="<Your_Minio_KEY>" -e MC_SECRET_KEY="<Your_Minio_Password>" slvs/offline-helm-project:0.1.1
+```
+
+### Clean Up
+```
+docker rm offline-helm-project
+```
+
+## Running Local
 ### Pre Reqs
 * git
 * helm
