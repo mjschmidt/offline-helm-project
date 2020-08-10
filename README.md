@@ -11,10 +11,50 @@
 Perfect for pulling together all the Dependencies needed to port to an offline env
 This is and always will be a Free and Open Source Project
 
+## Containerized Helm Charts
+We currently package the following helm charts into a container for transport to an offline environment
+* Helm Charts Stable (to be depreicated)
+* Helm Charts Incubator (to be depricated)
+* Bitnami Charts
+* Rancher Stable Charts
+* Rancher Latest Charts
+* Vm-Ware Charts
+* Rook-Operator Charts
+
+1) Run the container
+```
+docker run --name helm-packages -it docker.io/slvs/helm-packages sh
+```
+2) Then from a sperate terminal
+```
+docker cp helm-package:/helm-charts.tar .
+```
+3) Clean up
+```
+docker rm --force helm-package
+```
+
+With more to come! As Helm Hub replaces Helm Charts and projects host their own repos we will be replacing the charts found in Helm Stable with those 
+
+## Running with Docker
+### Pre Reqs
+* docker
+
+### How to run
+You can run this all in an already created docker container by running the following command
+```
+docker run --name offline-helm-project -e KUBE_LATEST_VERSION="v1.18.3" -e HELM_VERSION="v3.2.4" -e MC_ALIAS="minio" -e MC_ENDPOINT="<Your_Misio_URL>" -e MC_ACCESS_KEY="<Your_Minio_KEY>" -e MC_SECRET_KEY="<Your_Minio_Password>" slvs/offline-helm-project:0.1.1
+```
+
+### Clean Up
+```
+docker rm offline-helm-project
+```
+
+## Running Local
 ### Pre Reqs
 * git
 * helm
-* gsutil
 * awscli
 * mc (Minio client)
 
@@ -28,15 +68,6 @@ chmod +x mc
 ```
 #helm is not included in this git project
 sudo cp tools/helm /usr/bin/
-```
-
-### Install and login to Google Cloud to use gsutil
-```
-#install gsutil
-curl https://sdk.cloud.google.com | bash
-exec -l $SHELL
-gcloud init
-#use helmprojectoffline@gmail.com as the login account
 ```
 
 ### Script Usage

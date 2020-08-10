@@ -1,0 +1,23 @@
+FROM alpine:3.11
+
+ENV KUBE_LATEST_VERSION="v1.18.3"
+ENV HELM_VERSION="v3.2.4"
+ENV MC_ALIAS="your-alias"
+ENV MC_ENDPOINT="your-endpoint"
+ENV MC_ACCESS_KEY="your-username"
+ENV MC_SECRET_KEY="your-password"
+
+
+RUN apk update && apk add --no-cache python py-pip ca-certificates bash git openssh curl &&\
+    git clone https://github.com/mjschmidt/offline-helm-project.git &&\
+    pip install awscli &&\
+    wget https://dl.min.io/client/mc/release/linux-amd64/mc && chmod +x mc && mv mc /usr/bin &&\
+    mc config host add $MC_ALIAS $MC_ENDPOINT $MC_ACCESS_KEY $MC_SECRET_KEY --api S3v4 &&\
+    wget -q https://storage.googleapis.com/kubernetes-release/release/${KUBE_LATEST_VERSION}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl &&\
+    chmod +x /usr/local/bin/kubectl &&\
+    wget -q https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm &&\
+    chmod +x /usr/local/bin/helm && chmod g+rwx /root
+
+
+CMD /bin/sh
+
