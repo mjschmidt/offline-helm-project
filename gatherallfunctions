@@ -119,7 +119,7 @@ curl -o index.yaml -L https://kubernetes-charts-incubator.storage.googleapis.com
 mv fetch-incubator.txt ../
 cd ../
 echo $(pwd)
-ls -d $stablecharts/* > all.stable.charts.txt
+ls -d $incubatorcharts/* >> all.stable.charts.txt
 }
 
 function GETKUBECHARTDEPS {
