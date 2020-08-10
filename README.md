@@ -11,6 +11,31 @@
 Perfect for pulling together all the Dependencies needed to port to an offline env
 This is and always will be a Free and Open Source Project
 
+## Containerized Helm Charts
+We currently package the following helm charts into a container for transport to an offline environment
+* Helm Charts Stable (to be depreicated)
+* Helm Charts Incubator (to be depricated)
+* Bitnami Charts
+* Rancher Stable Charts
+* Rancher Latest Charts
+* Vm-Ware Charts
+* Rook-Operator Charts
+
+1) Run the container
+```
+docker run --name helm-packages -it docker.io/slvs/helm-packages sh
+```
+2) Then from a sperate terminal
+```
+docker cp helm-package:/helm-charts.tar .
+```
+3) Clean up
+```
+docker rm --force helm-package
+```
+
+With more to come! As Helm Hub replaces Helm Charts and projects host their own repos we will be replacing the charts found in Helm Stable with those 
+
 ## Running with Docker
 ### Pre Reqs
 * docker
